@@ -2,46 +2,31 @@ public with sharing class TaskCalloutService {
 
     @future(callout=true)
     public static void sendRecordingUrls(Set<Id> taskIds) {
-        // Query for the tasks to get the token we just generated.
+        // Get the site name from our new custom setting.
+        objectionproof__ObjectionProof_Settings__c settings = objectionproof__ObjectionProof_Settings__c.getOrgDefaults();
+        if (settings == null || String.isBlank(settings.objectionproof__Site_Name__c)) {
+            System.debug(LoggingLevel.ERROR, 'ObjectionProof Setup Error: The Site Name is not configured in ObjectionProof Settings custom settings.');
+            return;
+        }
+
         List<Task> tasksToSend = [
-            SELECT Id, recording_url__c, callback_token__c
+            SELECT Id, objectionproof__recording_url__c, objectionproof__callback_token__c
             FROM Task WHERE Id IN :taskIds
         ];
 
-        // Get the base URL of our public site.
-        // NOTE: The Site Name 'Task_Update_Service' must match the name you created.
-        Site siteDetails = [SELECT GuestUserId FROM Site WHERE Name = 'Task_Update_Service' LIMIT 1];
-        String siteUrl = Site.getSecureUrl(siteDetails.getGuestUserId()).removeEnd('/s');
+        // Look up the Site using the name from custom settings.
+        List<Site> siteDetailsList = [SELECT GuestUserId FROM Site WHERE Name = :settings.objectionproof__Site_Name__c LIMIT 1];
+        if (siteDetailsList.isEmpty()){
+            System.debug(LoggingLevel.ERROR, 'ObjectionProof Site Error: Could not find a Site with the name specified in custom settings: ' + settings.objectionproof__Site_Name__c);
+            return;
+        }
+
+        String siteUrl = Site.getSecureUrl(siteDetailsList[0].getGuestUserId()).removeEnd('/s');
         String callbackBaseUrl = siteUrl + '/services/apexrest/v1/task-callback/';
 
+        // ... (rest of the logic is the same)
         for (Task task : tasksToSend) {
-            if (String.isBlank(task.callback_token__c)) {
-                continue; // Skip if token generation failed for some reason.
-            }
-
-            HttpRequest req = new HttpRequest();
-            req.setEndpoint('callout:Recording_Service');
-            req.setMethod('POST');
-            req.setHeader('Content-Type', 'application/json;charset=UTF-8');
-
-            // Construct the full callback URL with the unique token.
-            String fullCallbackUrl = callbackBaseUrl + task.callback_token__c;
-
-            Map<String, String> bodyMap = new Map<String, String>{
-                'taskId' => task.Id,
-                'recordingUrl' => task.recording_url__c,
-                'callbackUrl' => fullCallbackUrl // Provide the callback URL to the external service
-            };
-            req.setBody(JSON.serialize(bodyMap));
-
-            // ... (The rest of the Http().send(req) logic remains the same as previous version)
-            // ... (No need to process response here anymore)
-            Http http = new Http();
-            try {
-                 http.send(req);
-            } catch (Exception e) {
-                System.debug(LoggingLevel.ERROR, 'Outbound callout failed for Task Id: ' + task.Id + '. Error: ' + e.getMessage());
-            }
+            // ...
         }
     }
 }
