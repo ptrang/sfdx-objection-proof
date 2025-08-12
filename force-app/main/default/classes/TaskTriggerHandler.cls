@@ -1,23 +1,31 @@
 public with sharing class TaskTriggerHandler {
 
-    public static void onAfterUpdate(List<Task> newTasks, Map<Id, Task> oldTaskMap) {
-        Set<Id> taskIdsForCallout = new Set<Id>();
-
+    // Runs before the record is saved to generate the callback token.
+    public static void onBeforeUpdate(List<Task> newTasks, Map<Id, Task> oldTaskMap) {
         for (Task newTask : newTasks) {
             Task oldTask = oldTaskMap.get(newTask.Id);
 
-            // Condition: The recording URL has a new value and is not the same as the old value.
-            // This captures both setting it for the first time (null -> value)
-            // and changing it (value1 -> value2).
-            if (newTask.recording_url__c != null && newTask.recording_url__c != oldTask.recording_url__c) {
+            // Generate a token ONLY when the recording URL is first populated.
+            if (newTask.recording_url__c != null && oldTask.recording_url__c == null) {
+                // Generate 128 bits of randomness and Base64 encode it for a URL-safe, highly unique token.
+                Blob cryptoKey = Crypto.generateAesKey(128);
+                newTask.callback_token__c = EncodingUtil.base64Encode(cryptoKey);
+            }
+        }
+    }
+
+    // Runs after the record is saved to make the outbound callout.
+    public static void onAfterUpdate(List<Task> newTasks, Map<Id, Task> oldTaskMap) {
+        Set<Id> taskIdsForCallout = new Set<Id>();
+        for (Task newTask : newTasks) {
+            Task oldTask = oldTaskMap.get(newTask.Id);
+            // Initiate the callout ONLY when the recording URL has been newly added.
+            if (newTask.recording_url__c != null && oldTask.recording_url__c == null) {
                 taskIdsForCallout.add(newTask.Id);
             }
         }
 
-        // If there are tasks that meet the criteria, make the asynchronous callout.
         if (!taskIdsForCallout.isEmpty()) {
-            // Pass the Set of Ids to the future method.
-            // Future methods can only accept primitive types, collections of primitives, or SObject Ids.
             TaskCalloutService.sendRecordingUrls(taskIdsForCallout);
         }
     }
