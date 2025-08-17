@@ -1,19 +1,19 @@
 # Salesforce Task Webhook Callback Architecture
 
-This project demonstrates a robust, asynchronous integration pattern. When a Task's `recording_url__c` is populated, Salesforce calls an external service and provides it with a unique, secure, single-use callback URL (a webhook). Once the external service finishes its processing, it calls this URL back to update the original Task with a `call_score__c`.
+This project demonstrates a robust, asynchronous integration pattern. When a Task's `tdc_cti__Recording_URL__c` is populated, Salesforce calls an external service and provides it with a unique, secure, single-use callback URL (a webhook). Once the external service finishes its processing, it calls this URL back to update the original Task with a `op_call_score__c`.
 
 ## How It Works
 
 ![Webhook Callback Flow](https://i.imgur.com/8QG34X5.png)
 
-1.  **Trigger Fires (`before update`)**: A user updates a Task with a `recording_url__c`. The `before update` trigger fires.
-2.  **Token Generation**: The `TaskTriggerHandler` generates a cryptographically secure, unique token and saves it in the `Task.callback_token__c` field before the record is committed to the database.
+1.  **Trigger Fires (`before update`)**: A user updates a Task with a `tdc_cti__Recording_URL__c`. The `before update` trigger fires.
+2.  **Token Generation**: The `TaskTriggerHandler` generates a cryptographically secure, unique token and saves it in the `Task.op_callback_token__c` field before the record is committed to the database.
 3.  **Asynchronous Callout (`after update`)**: After the record saves, the `after update` trigger fires and calls the `TaskCalloutService` future method.
-4.  **Outbound POST**: This service sends the `recording_url__c` **and** the newly generated `callbackUrl` (e.g., `https://my-site.my.salesforce-sites.com/services/apexrest/v1/task-callback/{token}`) to the external system.
+4.  **Outbound POST**: This service sends the `tdc_cti__Recording_URL__c` **and** the newly generated `callbackUrl` (e.g., `https://my-site.my.salesforce-sites.com/services/apexrest/v1/task-callback/{token}`) to the external system.
 5.  **External Processing**: The external system processes the recording at its own pace.
 6.  **Inbound Webhook Callback**: Once finished, the external system makes a `PATCH` request to the `callbackUrl` it received, including the score in the JSON body (e.g., `{"score": 95}`).
 7.  **Apex REST Service**: The public `TaskCallbackService` receives this request. It uses the token from the URL to find the correct Task.
-8.  **Secure Update**: The service updates the Task's `call_score__c` and simultaneously **nullifies the `callback_token__c`** to make the URL single-use.
+8.  **Secure Update**: The service updates the Task's `op_call_score__c` and simultaneously **nullifies the `op_callback_token__c`** to make the URL single-use.
 
 ## Setup Instructions
 

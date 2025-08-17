@@ -4,7 +4,7 @@ public with sharing class TaskCalloutService {
     public static void sendRecordingUrls(Set<Id> taskIds) {
         // Query for the tasks to get the token we just generated.
         List<Task> tasksToSend = [
-            SELECT Id, recording_url__c, callback_token__c
+            SELECT Id, tdc_cti__Recording_URL__c, op_callback_token__c
             FROM Task WHERE Id IN :taskIds
         ];
 
@@ -16,7 +16,7 @@ public with sharing class TaskCalloutService {
         String callbackBaseUrl = siteUrl + '/services/apexrest/v1/task-callback/';
 
         for (Task task : tasksToSend) {
-            if (String.isBlank(task.callback_token__c)) {
+            if (String.isBlank(task.op_callback_token__c)) {
                 continue; // Skip if token generation failed for some reason.
             }
 
@@ -26,11 +26,11 @@ public with sharing class TaskCalloutService {
             req.setHeader('Content-Type', 'application/json;charset=UTF-8');
 
             // Construct the full callback URL with the unique token.
-            String fullCallbackUrl = callbackBaseUrl + task.callback_token__c;
+            String fullCallbackUrl = callbackBaseUrl + task.op_callback_token__c;
 
             Map<String, String> bodyMap = new Map<String, String>{
                 'taskId' => task.Id,
-                'recordingUrl' => task.recording_url__c,
+                'recordingUrl' => task.tdc_cti__Recording_URL__c,
                 'callbackUrl' => fullCallbackUrl // Provide the callback URL to the external service
             };
             req.setBody(JSON.serialize(bodyMap));

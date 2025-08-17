@@ -16,7 +16,7 @@ global with sharing class TaskCallbackService {
         String token = request.requestURI.substring(request.requestURI.lastIndexOf('/') + 1);
 
         // Find the task using the unique, case-sensitive token.
-        List<Task> tasks = [SELECT Id, call_score__c FROM Task WHERE callback_token__c = :token LIMIT 1];
+        List<Task> tasks = [SELECT Id, op_call_score__c FROM Task WHERE op_callback_token__c = :token LIMIT 1];
 
         if (tasks.isEmpty()) {
             response.statusCode = 404; // Not Found
@@ -27,7 +27,7 @@ global with sharing class TaskCallbackService {
         Task taskToUpdate = tasks[0];
 
         // If the score is already set, the token was likely already used.
-        if (taskToUpdate.call_score__c != null) {
+        if (taskToUpdate.op_call_score__c != null) {
             response.statusCode = 410; // Gone (already processed)
             response.responseBody = Blob.valueOf('{"error":"This callback has already been processed."}');
             return;
@@ -39,9 +39,9 @@ global with sharing class TaskCallbackService {
                 ScorePayload.class
             );
 
-            taskToUpdate.call_score__c = payload.score;
+            taskToUpdate.op_call_score__c = payload.score;
             // CRITICAL: Invalidate the token to make it single-use.
-            taskToUpdate.callback_token__c = null;
+            taskToUpdate.op_callback_token__c = null;
 
             update taskToUpdate;
 

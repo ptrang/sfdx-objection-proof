@@ -6,10 +6,10 @@ public with sharing class TaskTriggerHandler {
             Task oldTask = oldTaskMap.get(newTask.Id);
 
             // Generate a token ONLY when the recording URL is first populated.
-            if (newTask.recording_url__c != null && oldTask.recording_url__c == null) {
+            if (newTask.tdc_cti__Recording_URL__c != null && oldTask.tdc_cti__Recording_URL__c == null) {
                 // Generate 128 bits of randomness and Base64 encode it for a URL-safe, highly unique token.
                 Blob cryptoKey = Crypto.generateAesKey(128);
-                newTask.callback_token__c = EncodingUtil.base64Encode(cryptoKey);
+                newTask.op_callback_token__c = EncodingUtil.base64Encode(cryptoKey);
             }
         }
     }
@@ -20,7 +20,7 @@ public with sharing class TaskTriggerHandler {
         for (Task newTask : newTasks) {
             Task oldTask = oldTaskMap.get(newTask.Id);
             // Initiate the callout ONLY when the recording URL has been newly added.
-            if (newTask.recording_url__c != null && oldTask.recording_url__c == null) {
+            if (newTask.tdc_cti__Recording_URL__c != null && oldTask.tdc_cti__Recording_URL__c == null) {
                 taskIdsForCallout.add(newTask.Id);
             }
         }

@@ -31,16 +31,16 @@ private class TaskCalloutServiceTest {
         Test.startTest();
         
         Task taskToUpdate = [SELECT Id FROM Task WHERE Id = :testTask.Id];
-        taskToUpdate.recording_url__c = 'https://example.com/recording/12345';
+        // taskToUpdate.tdc_cti__Recording_URL__c = 'https://example.com/recording/12345';
         update taskToUpdate;
         
         Test.stopTest();
 
         // After Test.stopTest(), the future method has run.
         // We now query the task again to verify it was updated with the score from the mock response.
-        Task resultTask = [SELECT Id, call_score__c FROM Task WHERE Id = :testTask.Id];
+        Task resultTask = [SELECT Id, op_call_score__c FROM Task WHERE Id = :testTask.Id];
 
-        System.assertEquals(92.5, resultTask.call_score__c,
+        System.assertEquals(92.5, resultTask.op_call_score__c,
             'The call score should be updated from the mock response.');
     }
 }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>callback_token__c</fullName>
+    <fullName>op_callback_token__c</fullName>
     <caseSensitive>true</caseSensitive>
     <description>Secure, single-use token for the external service to use in the callback webhook to update this task.</description>
     <externalId>true</externalId>
