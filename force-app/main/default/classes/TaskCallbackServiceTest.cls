@@ -74,4 +74,26 @@ private class TaskCallbackServiceTest {
 
         System.assertEquals(410, res.statusCode);
     }
+
+    // NEW TEST: Covers the case where the callback body is malformed.
+    @isTest
+    static void testCallbackWithInvalidJsonBody() {
+        RestRequest req = new RestRequest();
+        RestResponse res = new RestResponse();
+
+        req.requestURI = '/services/apexrest/v1/task-callback/VALID-TOKEN-123';
+        req.httpMethod = 'PATCH';
+        // Send a malformed JSON string
+        req.requestBody = Blob.valueOf('{"score": not_a_number}');
+
+        RestContext.request = req;
+        RestContext.response = res;
+
+        Test.startTest();
+        TaskCallbackService.updateTaskScore();
+        Test.stopTest();
+
+        // We expect the service to identify the bad request and return a 400 status code.
+        System.assertEquals(400, res.statusCode, 'Status code should be 400 for a bad request.');
+    }
 }

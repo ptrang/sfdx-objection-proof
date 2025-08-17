@@ -4,7 +4,7 @@ public with sharing class TaskCalloutService {
     public static void sendRecordingUrls(Set<Id> taskIds) {
         // Query for the tasks to get the token we just generated.
         List<Task> tasksToSend = [
-            SELECT Id, tdc_cti__Recording_URL__c, op_callback_token__c
+            SELECT Id, op_recording_url__c, op_callback_token__c
             FROM Task WHERE Id IN :taskIds
         ];
 
@@ -30,7 +30,7 @@ public with sharing class TaskCalloutService {
 
             Map<String, String> bodyMap = new Map<String, String>{
                 'taskId' => task.Id,
-                'recordingUrl' => task.tdc_cti__Recording_URL__c,
+                'recordingUrl' => task.op_recording_url__c,
                 'callbackUrl' => fullCallbackUrl // Provide the callback URL to the external service
             };
             req.setBody(JSON.serialize(bodyMap));
