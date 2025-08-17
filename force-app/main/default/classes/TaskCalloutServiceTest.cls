@@ -18,29 +18,29 @@ private class TaskCalloutServiceTest {
         }
     }
 
-    // @isTest
-    // static void testPostUrlAndUpdateScore() {
-    //     Task testTask = new Task(
-    //         Subject = 'Test Task for Callout',
-    //         Status = 'Not Started'
-    //     );
-    //     insert testTask;
+    @isTest
+    static void testPostUrlAndUpdateScore() {
+        Task testTask = new Task(
+            Subject = 'Test Task for Callout',
+            Status = 'Not Started'
+        );
+        insert testTask;
 
-    //     Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
+        Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
 
-    //     Test.startTest();
+        Test.startTest();
         
-    //     Task taskToUpdate = [SELECT Id FROM Task WHERE Id = :testTask.Id];
-    //     taskToUpdate.op_recording_url__c = 'https://example.com/recording/12345';
-    //     update taskToUpdate;
+        Task taskToUpdate = [SELECT Id, op_recording_url__c FROM Task WHERE Id = :testTask.Id];
+        taskToUpdate.op_recording_url__c = 'https://example.com/recording/12345';
+        update taskToUpdate;
         
-    //     Test.stopTest();
+        Test.stopTest();
 
-    //     // After Test.stopTest(), the future method has run.
-    //     // We now query the task again to verify it was updated with the score from the mock response.
-    //     Task resultTask = [SELECT Id, op_call_score__c FROM Task WHERE Id = :testTask.Id];
+        // After Test.stopTest(), the future method has run.
+        // We now query the task again to verify it was updated with the score from the mock response.
+        Task resultTask = [SELECT Id, op_call_score__c FROM Task WHERE Id = :testTask.Id];
 
-    //     System.assertEquals(92.5, resultTask.op_call_score__c,
-    //         'The call score should be updated from the mock response.');
-    // }
+        System.assertEquals(92.5, resultTask.op_call_score__c,
+            'The call score should be updated from the mock response.');
+    }
 }
