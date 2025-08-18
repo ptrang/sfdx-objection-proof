@@ -45,7 +45,7 @@ This project demonstrates a robust, asynchronous integration pattern. When a Tas
 
 4.  **Update Named Credential**:
     * Go to **Setup -> Security -> Named Credentials**.
-    * Edit the `Recording_Service` and provide the real URL for your external processing service.
+    * Edit the `objproof_namedcred` and provide the real URL for your external processing service.
 
 5.  **Test**:
     * Create or update a Task with a `Recording URL`.

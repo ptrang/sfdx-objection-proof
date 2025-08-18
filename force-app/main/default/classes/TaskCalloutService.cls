@@ -21,7 +21,7 @@ public with sharing class TaskCalloutService {
             }
 
             HttpRequest req = new HttpRequest();
-            req.setEndpoint('callout:Recording_Service');
+            req.setEndpoint('callout:objproof_namedcred');
             req.setMethod('POST');
             req.setHeader('Content-Type', 'application/json;charset=UTF-8');
 

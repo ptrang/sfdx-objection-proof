@@ -5,7 +5,7 @@ private class TaskCalloutServiceTest {
     public class MockHttpResponseGenerator implements HttpCalloutMock {
         public HTTPResponse respond(HTTPRequest req) {
             // VERIFY: These assertions check that the callout is being made correctly
-            System.assertEquals('callout:Recording_Service', req.getEndpoint());
+            System.assertEquals('callout:objproof_namedcred', req.getEndpoint());
             System.assertEquals('POST', req.getMethod());
             System.assert(req.getBody() != null);
 
