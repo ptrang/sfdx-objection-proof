@@ -32,6 +32,7 @@ private class TaskCalloutServiceTest {
         
         Task taskToUpdate = [SELECT Id, op_recording_url__c FROM Task WHERE Id = :testTask.Id];
         taskToUpdate.op_recording_url__c = 'https://example.com/recording/12345';
+        // TaskCalloutService.sendRecordingUrls(new Set<Id>{testTask.Id});
         update taskToUpdate;
         
         Test.stopTest();
