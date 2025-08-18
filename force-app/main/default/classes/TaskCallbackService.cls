@@ -20,7 +20,7 @@ global with sharing class TaskCallbackService {
 
         if (tasks.isEmpty()) {
             response.statusCode = 404; // Not Found
-            response.responseBody = Blob.valueOf('{"error":"Invalid or expired token."}');
+            response.responseBody = Blob.valueOf('{"error":"Invalid or expired token "' + token + '"."}');
             return;
         }
 
