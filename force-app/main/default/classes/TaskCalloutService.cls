@@ -10,10 +10,9 @@ public with sharing class TaskCalloutService {
 
         // Get the base URL of our public site.
         // NOTE: The Site Name 'Task_Update_Service' must match the name you created.
-        Site siteDetails = [SELECT GuestUserId, UrlPathPrefix FROM Site WHERE Name = 'Task_Update_Service' LIMIT 1];
-        // String siteUrl = Site.getSecureUrl(siteDetails.GuestUserId).removeEnd('/s');
-        String siteUrl = Url.getOrgDomainUrl().toExternalForm() + '/' + siteDetails.UrlPathPrefix;
-        String callbackBaseUrl = siteUrl + '/services/apexrest/v1/task-callback/';
+        Site sites = [SELECT Id, GuestUserId, UrlPathPrefix FROM Site WHERE Name = 'Task_Update_Service' LIMIT 1];
+        SiteDetail siteDetails = [SELECT Id, DurableId, IsRegistrationEnabled, SecureUrl FROM SiteDetail WHERE DurableId = :sites.Id LIMIT 1];
+        String callbackBaseUrl = siteDetails.SecureUrl + '/services/apexrest/v1/task-callback/';
 
         for (Task task : tasksToSend) {
             if (String.isBlank(task.op_callback_token__c)) {
