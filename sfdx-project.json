@@ -1,15 +1,20 @@
 {
   "packageDirectories": [
     {
+      "versionName": "ver 0.1",
+      "versionNumber": "0.1.0.NEXT",
       "path": "force-app",
       "default": true,
-      "packageName": "Objection Proof AI",
-      "versionName": "Version 1.0",
-      "versionNumber": "1.0.0.NEXT"
+      "package": "Objection Proof",
+      "versionDescription": "Enhance conversations starting now"
     }
   ],
   "name": "sfdx-objection-proof",
   "namespace": "objectionproof",
   "sfdcLoginUrl": "https://login.salesforce.com",
-  "sourceApiVersion": "64.0"
+  "sourceApiVersion": "64.0",
+  "packageAliases": {
+    "ObjectionProof": "0HogL0000000QH3SAM",
+    "Objection Proof": "0HogL0000000QKHSA2"
+  }
 }
