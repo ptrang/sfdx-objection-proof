@@ -33,6 +33,8 @@ private class TaskCalloutServiceTest {
 
         // EXECUTE
         Test.startTest();
+        // Set a dummy site context for the test
+        // Commmenting out for now as not required System.Url.setURL(new URL('https://my-domain.my.salesforce-sites.com/task-callback'));
         TaskCalloutService.sendRecordingUrls(new Set<Id>{testTask.Id});
         Test.stopTest();
 
