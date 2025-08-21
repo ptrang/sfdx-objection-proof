@@ -42,6 +42,7 @@ public with sharing class TaskCalloutService {
 
             Map<String, String> bodyMap = new Map<String, String>{
                 'taskId' => task.Id,
+                'title' => task.Subject,
                 'recordingUrl' => task.op_recording_url__c,
                 'callbackUrl' => fullCallbackUrl, // Provide the callback URL to the external service
                 'callFrom' => task.op_call_from__c,
