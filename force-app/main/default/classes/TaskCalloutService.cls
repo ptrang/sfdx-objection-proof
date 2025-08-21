@@ -5,7 +5,7 @@ public with sharing class TaskCalloutService {
         // Query for the tasks to get the token we just generated.
         List<Task> tasksToSend = [
             SELECT Id, Subject, op_recording_url__c, op_callback_token__c,
-            tdc_cti__Called_Number__c, tdc_cti__Call_From__c,
+            op_called_number__c, op__call_from__c,
             WhoId, Who.Name, OwnerId, Owner.Name
             FROM Task WHERE Id IN :taskIds
         ];
@@ -44,8 +44,8 @@ public with sharing class TaskCalloutService {
                 'taskId' => task.Id,
                 'recordingUrl' => task.op_recording_url__c,
                 'callbackUrl' => fullCallbackUrl, // Provide the callback URL to the external service
-                'calledNumber' => tdc_cti__Called_Number__c,
-                'callFrom' => tdc_cti__Call_From__c,
+                'calledNumber' => op_called_number__c,
+                'callFrom' => op__call_from__c,
                 'whoId' => task.WhoId,
                 'whoName' => task.Who.Name,
                 'ownerId' => task.OwnerId,
