@@ -9,7 +9,12 @@ public with sharing class TaskTriggerHandler {
             if (newTask.op_recording_url__c != null && oldTask.op_recording_url__c == null) {
                 // Generate 128 bits of randomness and Base64 encode it for a URL-safe, highly unique token.
                 Blob cryptoKey = Crypto.generateAesKey(128);
-                newTask.op_callback_token__c = EncodingUtil.base64Encode(cryptoKey);
+                
+                // Base64 encode the key and then make it URL-safe by replacing special characters.
+                String token = EncodingUtil.base64Encode(cryptoKey);
+                token = token.replace('+', '-').replace('/', '_');
+                
+                newTask.op_callback_token__c = token;
             }
         }
     }
