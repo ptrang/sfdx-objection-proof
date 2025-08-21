@@ -4,7 +4,9 @@ public with sharing class TaskCalloutService {
     public static void sendRecordingUrls(Set<Id> taskIds) {
         // Query for the tasks to get the token we just generated.
         List<Task> tasksToSend = [
-            SELECT Id, op_recording_url__c, op_callback_token__c
+            SELECT Id, Subject, op_recording_url__c, op_callback_token__c,
+            tdc_cti__Called_Number__c, tdc_cti__Call_From__c,
+            WhoId, Who.Name, OwnerId, Owner.Name
             FROM Task WHERE Id IN :taskIds
         ];
 
@@ -41,7 +43,14 @@ public with sharing class TaskCalloutService {
             Map<String, String> bodyMap = new Map<String, String>{
                 'taskId' => task.Id,
                 'recordingUrl' => task.op_recording_url__c,
-                'callbackUrl' => fullCallbackUrl // Provide the callback URL to the external service
+                'callbackUrl' => fullCallbackUrl, // Provide the callback URL to the external service
+                'calledNumber' => tdc_cti__Called_Number__c,
+                'callFrom' => tdc_cti__Call_From__c,
+                'whoId' => task.WhoId,
+                'whoName' => task.Who.Name,
+                'ownerId' => task.OwnerId,
+                'ownerName' => task.Owner.Name,
+                'source' => 'sf-bolder360'
             };
             req.setBody(JSON.serialize(bodyMap));
 
