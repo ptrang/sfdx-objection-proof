@@ -3,7 +3,7 @@
     <fullName>op_call_score__c</fullName>
     <description>The score returned from the external recording analysis service.</description>
     <externalId>false</externalId>
-    <label>Call Score</label>
+    <label>Call Score (OP)</label>
     <precision>18</precision>
     <required>false</required>
     <scale>2</scale>

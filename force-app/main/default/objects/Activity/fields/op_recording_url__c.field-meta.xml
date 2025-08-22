@@ -3,7 +3,7 @@
     <fullName>op_recording_url__c</fullName>
     <description>URL of the recording associated with this task.</description>
     <externalId>false</externalId>
-    <label>Recording URL</label>
+    <label>Recording URL (OP)</label>
     <length>255</length>
     <required>false</required>
     <trackHistory>false</trackHistory>
