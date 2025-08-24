@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ExternalClientApplication xmlns="http://soap.sforce.com/2006/04/metadata">
+    <contactEmail>patrick@closemoresales.com</contactEmail>
+    <contactPhone>4802690689</contactPhone>
+    <distributionState>Packaged</distributionState>
+    <iconUrl>https://cdn.zapier.com/storage/developer_cli/7a0f8d9d59c05242345b7ce7bfe79104.png</iconUrl>
+    <isProtected>true</isProtected>
+    <label>Objection Proof AI</label>
+    <logoUrl>https://cdn.zapier.com/storage/developer_cli/7a0f8d9d59c05242345b7ce7bfe79104.png</logoUrl>
+    <orgScopedExternalApp>00DgL000006LHGv:Objection_Proof_AI</orgScopedExternalApp>
+</ExternalClientApplication>
