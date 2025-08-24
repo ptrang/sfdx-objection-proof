@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ExtlClntAppOauthConfigurablePolicies xmlns="http://soap.sforce.com/2006/04/metadata">
+    <commaSeparatedProfile>System Administrator</commaSeparatedProfile>
     <externalClientApplication>Objection_Proof_AI</externalClientApplication>
     <ipRelaxationPolicyType>Enforce</ipRelaxationPolicyType>
+    <isClientCredentialsFlowEnabled>false</isClientCredentialsFlowEnabled>
+    <isGuestCodeCredFlowEnabled>false</isGuestCodeCredFlowEnabled>
+    <isTokenExchangeFlowEnabled>false</isTokenExchangeFlowEnabled>
     <label>Objection_Proof_AI_oauthPlcy</label>
-    <permittedUsersPolicyType>AllSelfAuthorized</permittedUsersPolicyType>
+    <permittedUsersPolicyType>AdminApprovedPreAuthorized</permittedUsersPolicyType>
     <refreshTokenPolicyType>Infinite</refreshTokenPolicyType>
     <requiredSessionLevel>STANDARD</requiredSessionLevel>
+    <sessionTimeoutInMinutes>15</sessionTimeoutInMinutes>
 </ExtlClntAppOauthConfigurablePolicies>

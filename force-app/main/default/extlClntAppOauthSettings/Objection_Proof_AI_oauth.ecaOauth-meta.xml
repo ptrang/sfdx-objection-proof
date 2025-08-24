@@ -2,6 +2,7 @@
 <ExtlClntAppOauthSettings xmlns="http://soap.sforce.com/2006/04/metadata">
     <commaSeparatedOauthScopes>Api, RefreshToken</commaSeparatedOauthScopes>
     <externalClientApplication>Objection_Proof_AI</externalClientApplication>
+    <isFirstPartyAppEnabled>false</isFirstPartyAppEnabled>
     <label>Objection_Proof_AI_oauth</label>
     <oauthLink>00DgL000006LHGv:888gL0000009gzJ</oauthLink>
 </ExtlClntAppOauthSettings>
