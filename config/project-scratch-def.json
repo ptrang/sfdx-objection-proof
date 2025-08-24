@@ -1,16 +1,13 @@
 {
   "orgName": "Disruptors",
   "edition": "Developer",
-  "features": ["EnableSetPasswordInApi", "ExternalClientApps", "ExtlClntAppSecretExposeCtl"],
+  "features": ["EnableSetPasswordInApi"],
   "settings": {
     "lightningExperienceSettings": {
       "enableS1DesktopEnabled": true
     },
     "mobileSettings": {
       "enableS1EncryptedStoragePref2": false
-    },
-    "externalClientAppSettings": {
-      "enableExternalClientApps": true
     }
   }
 }

@@ -12,5 +12,9 @@
         <members>*</members>
         <name>ExtlClntAppOauthConfigurablePolicies</name>
     </types>
+    <types>
+        <members>*</members>
+        <name>PermissionSet</name>
+    </types>
     <version>64.0</version>
 </Package>
