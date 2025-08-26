@@ -25,8 +25,9 @@ public with sharing class TaskTriggerHandler {
         Set<Id> taskIdsForCallout = new Set<Id>();
         for (Task newTask : newTasks) {
             Task oldTask = oldTaskMap.get(newTask.Id);
-            // Initiate the callout ONLY when the recording URL has been newly added.
-            if (newTask.op_recording_url__c != null && oldTask.op_recording_url__c == null) {
+
+            // Initiate the callout ONLY when the callback token has just been generated.
+            if (newTask.op_callback_token__c != null && oldTask.op_callback_token__c == null) {
                 System.debug('Callout Condition MET for Task Id: ' + newTask.Id);
                 taskIdsForCallout.add(newTask.Id);
             } else {
