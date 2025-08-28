@@ -3,12 +3,15 @@ public with sharing class TaskCalloutService {
     @future(callout=true)
     public static void sendRecordingUrls(Set<Id> taskIds) {
         // Query for the tasks to get the token we just generated.
+        System.debug(logginglevel.DEBUG, '--- TaskCalloutService: sendRecordingUrls STARTS ---');
+        System.debug(logginglevel.DEBUG, '--- TaskCalloutService: taskIds = .' + taskIds.toString() + '. STARTS ---');
         List<Task> tasksToSend = [
             SELECT Id, Subject, op_recording_url__c, op_callback_token__c,
             op_call_to__c, op_call_from__c,
             WhoId, Who.Name, OwnerId, Owner.Name
             FROM Task WHERE Id IN :taskIds
         ];
+        System.debug(logginglevel.DEBUG, '--- TaskCalloutService: tasksToSend = .' + tasksToSend.size() + '. STARTS ---');
 
         // Get the base URL of our public site.
         // NOTE: The Site Name 'Task_Update_Service' must match the name you created.
