@@ -54,8 +54,8 @@ global with sharing class TaskCallbackService {
             );
 
             taskToUpdate.op_salescall_id__c = payload.salescall_id;
-            taskToUpdate.op_evaluation__c = payload.evaluation;
             taskToUpdate.op_transcript__c = payload.transcript;
+            taskToUpdate.op_evaluation__c = payload.evaluation;
             taskToUpdate.op_call_score_opening__c = payload.opening;
             taskToUpdate.op_call_score_engagement__c = payload.engagement;
             taskToUpdate.op_call_score_nonneedy__c = payload.nonneedy;
