@@ -1,13 +1,13 @@
 {
   "packageDirectories": [
     {
-      "versionName": "ver 0.7",
-      "versionNumber": "0.7.0.NEXT",
+      "versionName": "ver 0.8",
+      "versionNumber": "0.8.0.NEXT",
       "ancestorVersion": "HIGHEST",
       "path": "force-app",
       "default": true,
       "package": "Objection Proof",
-      "versionDescription": "Enhance conversations starting now"
+      "versionDescription": "Coaching and analysis on your sales calls to improve process"
     }
   ],
   "name": "sfdx-objection-proof",
@@ -24,6 +24,7 @@
     "Objection Proof@0.5.0-1": "04tgL0000005OBNQA2",
     "Objection Proof@0.6.0-1": "04tgL0000005VrBQAU",
     "Objection Proof@0.7.0-1": "04tgL0000005W2TQAU",
-    "Objection Proof@0.7.0-2": "04tgL0000005W45QAE"
+    "Objection Proof@0.7.0-2": "04tgL0000005W45QAE",
+    "Objection Proof@0.8.0-1": "04tgL0000005lHdQAI"
   }
 }
