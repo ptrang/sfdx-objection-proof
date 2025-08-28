@@ -3,8 +3,22 @@ global with sharing class TaskCallbackService {
 
     // Helper class to parse the incoming JSON body
     private class ScorePayload {
-        public Decimal score { get; set; }
+        public String salescall_id { get; set; }
         public String status { get; set; }
+        public String transcript { get; set; }
+        public String evaluation { get; set; }
+        public Decimal revenue { get; set; }
+        public Decimal opening { get; set; }
+        public Decimal engagement { get; set; }
+        public Decimal nonneedy { get; set; }
+        public Decimal guiding { get; set; }
+        public Decimal closing { get; set; }
+        public Decimal assertiveness { get; set; }
+        public Decimal empathy { get; set; }
+        public Decimal stories { get; set; }
+        public Decimal objection { get; set; }
+        public Decimal remorse { get; set; }
+        public Decimal score { get; set; }
     }
 
     @HttpPatch
@@ -16,7 +30,7 @@ global with sharing class TaskCallbackService {
         String token = request.requestURI.substring(request.requestURI.lastIndexOf('/') + 1);
 
         // Find the task using the unique, case-sensitive token.
-        List<Task> tasks = [SELECT Id, op_call_score__c FROM Task WHERE op_callback_token__c = :token LIMIT 1];
+        List<Task> tasks = [SELECT Id, op_salescall_id__c, op_transcript__c, op_evaluation__c, op_call_score__c FROM Task WHERE op_callback_token__c = :token LIMIT 1];
 
         if (tasks.isEmpty()) {
             response.statusCode = 404; // Not Found
@@ -39,6 +53,19 @@ global with sharing class TaskCallbackService {
                 ScorePayload.class
             );
 
+            taskToUpdate.op_salescall_id__c = payload.salescall_id;
+            taskToUpdate.op_evaluation__c = payload.evaluation;
+            taskToUpdate.op_transcript__c = payload.transcript;
+            taskToUpdate.op_call_score_opening__c = payload.opening;
+            taskToUpdate.op_call_score_engagement__c = payload.engagement;
+            taskToUpdate.op_call_score_nonneedy__c = payload.nonneedy;
+            taskToUpdate.op_call_score_guiding__c = payload.guiding;
+            taskToUpdate.op_call_score_closing__c = payload.closing;
+            taskToUpdate.op_call_score_assertiveness__c = payload.assertiveness;
+            taskToUpdate.op_call_score_empathy__c = payload.empathy;
+            taskToUpdate.op_call_score_stories__c = payload.stories;
+            taskToUpdate.op_call_score_objection__c = payload.objection;
+            taskToUpdate.op_call_score_remorse__c = payload.remorse;
             taskToUpdate.op_call_score__c = payload.score;
             // CRITICAL: Invalidate the token to make it single-use.
             taskToUpdate.op_callback_token__c = null;
