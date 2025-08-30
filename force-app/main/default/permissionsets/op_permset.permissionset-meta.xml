@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Objection Proof Permission Set</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>Objection Proof AI Permission Set</label>
+    <classAccesses>
+        <apexClass>objectionproof__TaskCallbackService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>objectionproof__TaskCallbackServiceTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>objectionproof__TaskCalloutService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>objectionproof__TaskCalloutServiceTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>objectionproof__TaskTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>objectionproof__TaskTriggerHandlerTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <externalCredentialPrincipalAccesses>
+        <enabled>true</enabled>
+        <externalCredentialPrincipal>objectionproof__objproof_extcred-Principal</externalCredentialPrincipal>
+    </externalCredentialPrincipalAccesses>
+</PermissionSet>
