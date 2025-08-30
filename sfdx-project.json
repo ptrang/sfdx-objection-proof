@@ -1,13 +1,28 @@
 {
   "packageDirectories": [
     {
-      "versionName": "ver 0.9",
-      "versionNumber": "0.9.0.NEXT",
+      "versionName": "ver 1.0",
+      "versionNumber": "1.0.0.NEXT",
       "ancestorVersion": "HIGHEST",
       "path": "force-app",
       "default": true,
       "package": "Objection Proof",
       "versionDescription": "Coaching and analysis on your sales calls to improve process"
+    },
+    {
+      "versionName": "ver 1.0",
+      "versionNumber": "1.0.0.NEXT",
+      "ancestorVersion": "HIGHEST",
+      "path": "op-app",
+      "default": false,
+      "package": "ObjectionProofAnalyticsApp",
+      "versionDescription": "Coaching and analysis on your sales calls to improve process",
+      "dependencies": [
+        {
+          "package": "Objection Proof",
+          "versionNumber": "1.0.0.LATEST"
+        }
+      ]
     }
   ],
   "name": "sfdx-objection-proof",
