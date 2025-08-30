@@ -3,9 +3,11 @@ private class LoggerServiceTest {
 
     @isTest
     static void testLogFromSynchronousContext() {
-        // --- NEW ---
-        // Directly enable logging for the context of this test.
-        LoggerService.isLoggingEnabled = true;
+        // --- CORRECTED ---
+        // Inject the setting at the start of the test method, not in @TestSetup.
+        SettingsService.settingsMap.put('Logging_Enabled', new objectionproof__Application_Setting__mdt(
+            objectionproof__Value__c = 'true'
+        ));
 
         Test.startTest();
         LoggerService.log('INFO', 'Test message from sync context', 'LoggerServiceTest.sync');
@@ -17,8 +19,10 @@ private class LoggerServiceTest {
 
     @isTest
     static void testLogFromAsynchronousContext() {
-        // Enable logging for the test.
-        LoggerService.isLoggingEnabled = true;
+        // Inject the setting at the start of the test method.
+        SettingsService.settingsMap.put('Logging_Enabled', new objectionproof__Application_Setting__mdt(
+            objectionproof__Value__c = 'true'
+        ));
 
         Test.startTest();
         System.enqueueJob(new AsyncLoggerTestJob());
@@ -30,8 +34,10 @@ private class LoggerServiceTest {
 
     @isTest
     static void testLogWithList() {
-        // Enable logging for the test.
-        LoggerService.isLoggingEnabled = true;
+        // Inject the setting at the start of the test method.
+        SettingsService.settingsMap.put('Logging_Enabled', new objectionproof__Application_Setting__mdt(
+            objectionproof__Value__c = 'true'
+        ));
         
         List<objectionproof__Log__c> logsToCreate = new List<objectionproof__Log__c>();
         logsToCreate.add(new objectionproof__Log__c(
@@ -47,7 +53,7 @@ private class LoggerServiceTest {
         List<objectionproof__Log__c> logs = [SELECT Id FROM objectionproof__Log__c];
         System.assertEquals(1, logs.size(), 'One log record should have been created.');
     }
-    
+
     // Helper class to simulate running code in an asynchronous context.
     public class AsyncLoggerTestJob implements Queueable {
         public void execute(QueueableContext context) {

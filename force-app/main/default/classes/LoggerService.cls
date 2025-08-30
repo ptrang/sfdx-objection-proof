@@ -43,8 +43,8 @@ public with sharing class LoggerService {
     }
     
     public static void log(List<Log__c> logs) {
-        // The check now uses the static variable, which is safely initialized.
-        if (isLoggingEnabled != true) {
+        // Check the new, centralized SettingsService.
+        if (!SettingsService.getBoolean('Logging_Enabled')) {
             return;
         }
 

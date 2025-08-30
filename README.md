@@ -50,15 +50,22 @@ This project demonstrates a robust, asynchronous integration pattern. When a Tas
     * Use a tool like Postman or `curl` to simulate the external service's callback. Make a `PATCH` request to your Site URL (`https://YOUR_SITE_DOMAIN/taskcallback/services/apexrest/objectionproof/v1/task-callback/{THE_TOKEN_VALUE}`) with a body like `{"score": 95}`.
     * Verify the `Call Score` on the Task is updated and the `Callback Token` is now blank.
 
-## Configuring Logging
+## Application Configuration
 
-This package includes a custom logging framework to help diagnose issues. Logging is **disabled by default**. To enable it, you must create a configuration record.
+This package uses Custom Metadata Types for configuration. To change settings, such as enabling the custom logger, you must create or edit records for the "Application Setting" Custom Metadata Type.
+
+### How to Enable Logging
+
+Logging is **disabled by default**. To enable it:
 
 1.  Go to **Setup** -> **Custom Metadata Types**.
-2.  Click **Manage Records** next to **Log Configuration**.
+2.  Click **Manage Records** next to **Objection Proof Setting**.
 3.  Click **New**.
-4.  For the **Label** and **Log Configuration Name**, enter `Default`.
-5.  Check the **Logging Enabled** checkbox.
-6.  Click **Save**.
+4.  Set the following values:
+    * **Label:** `Logging Enabled`
+    * **Application Setting Name:** `Logging_Enabled`
+    * **Value:** `true`
+    * **Description:** `Set to 'true' to enable the custom logging service.`
+5.  Click **Save**.
 
-To disable logging at any time, you can return to this record and uncheck the "Logging Enabled" box.
+To disable logging, you can either delete this record or change its **Value** to `false`.
