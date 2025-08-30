@@ -1,17 +1,28 @@
 public with sharing class LoggerService {
 
+    // By making this variable @TestVisible, our test class can set it directly.
+    @TestVisible
     private static Boolean isLoggingEnabled;
 
     // Use a static block to query the setting once per transaction.
-    // This is highly efficient as it's cached.
+    // This runs in normal execution but can be bypassed by the test.
     static {
-        Log_Configuration__mdt config = [
-            SELECT Logging_Enabled__c
-            FROM Log_Configuration__mdt
-            WHERE DeveloperName = 'Default'
-            LIMIT 1
-        ];
-        isLoggingEnabled = (config != null && config.Logging_Enabled__c);
+        // We check if we are in a test context. If not, we query the setting.
+        if (!Test.isRunningTest()) {
+            try {
+                Log_Configuration__mdt config = [
+                    SELECT Logging_Enabled__c
+                    FROM Log_Configuration__mdt
+                    WHERE DeveloperName = 'Default'
+                    LIMIT 1
+                ];
+                isLoggingEnabled = (config != null && config.Logging_Enabled__c);
+            } catch (QueryException e) {
+                // If the query fails for any reason, default to logging being off.
+                isLoggingEnabled = false;
+                System.debug('LoggerService static init failed: ' + e.getMessage());
+            }
+        }
     }
 
     @future
@@ -41,6 +52,15 @@ public with sharing class LoggerService {
     }
     
     public static void log(List<Log__c> logs) {
+        // Now, this check uses the value set by the test or by the static block.
+        if (isLoggingEnabled != true) { // Explicitly check for true
+            return;
+        }
+
+        if (logs == null || logs.isEmpty()) {
+            return;
+        }
+
         // Check the cached static variable.
         if (!isLoggingEnabled) {
             return;
