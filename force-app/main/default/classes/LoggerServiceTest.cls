@@ -53,4 +53,34 @@ private class LoggerServiceTest {
         List<objectionproof__Log__c> logs = [SELECT Id FROM objectionproof__Log__c];
         System.assertEquals(0, logs.size(), 'No log records should be created when logging is disabled.');
     }
+
+    // --- NEW TEST METHOD ---
+    @isTest
+    static void testLoggingPopulatesTriggeringUser() {
+        // Arrange: Create a specific test user to run the code as.
+        Profile p = [SELECT Id FROM Profile WHERE Name='Standard User'];
+        User testUser = new User(
+            Alias = 'testuser', 
+            Email='testuser@example.com', 
+            EmailEncodingKey='UTF-8', 
+            LastName='Testing', 
+            LanguageLocaleKey='en_US', 
+            LocaleSidKey='en_US', 
+            ProfileId = p.Id, 
+            TimeZoneSidKey='America/Los_Angeles', 
+            UserName='testuser' + System.currentTimeMillis() + '@testorg.com'
+        );
+        insert testUser;
+
+        // Act: Run the logging logic as the new test user.
+        System.runAs(testUser) {
+            enableTestLogging();
+            LoggerService.log('INFO', 'Test message from a specific user', 'testRunAs');
+        }
+
+        // Assert: Verify that the log was created and correctly attributes the triggering user.
+        List<objectionproof__Log__c> logs = [SELECT Id, objectionproof__Triggering_User__c FROM objectionproof__Log__c];
+        System.assertEquals(1, logs.size(), 'A log record should have been created.');
+        System.assertEquals(testUser.Id, logs[0].objectionproof__Triggering_User__c, 'The Triggering User on the log should match the user who ran the code.');
+    }
 }

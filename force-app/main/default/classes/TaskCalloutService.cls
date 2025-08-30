@@ -2,6 +2,8 @@ public with sharing class TaskCalloutService {
 
     @future(callout=true)
     public static void sendRecordingUrls(Set<Id> taskIds) {
+        Id triggeringUserId = UserInfo.getUserId();
+
         List<Log__c> logsToCreate = new List<Log__c>();
         String context = 'TaskCalloutService.sendRecordingUrls';
 
@@ -9,7 +11,8 @@ public with sharing class TaskCalloutService {
         logsToCreate.add(new Log__c(
             objectionproof__Level__c = 'INFO',
             objectionproof__Message__c = 'Starting callout process for ' + taskIds.size() + ' tasks.',
-            objectionproof__Context__c = context
+            objectionproof__Context__c = context,
+            objectionproof__Triggering_User__c = triggeringUserId // Add user to log
         ));
         List<Task> tasksToSend = [
             SELECT Id, Subject, op_recording_url__c, op_callback_token__c,
@@ -34,7 +37,8 @@ public with sharing class TaskCalloutService {
             logsToCreate.add(new Log__c(
                 objectionproof__Level__c = 'WARN',
                 objectionproof__Message__c = 'Missing Tasks (likely deleted): ' + String.valueOf(new List<Id>(missingTaskIds)),
-                objectionproof__Context__c = context
+                objectionproof__Context__c = context,
+                objectionproof__Triggering_User__c = triggeringUserId // Add user to log
             ));
         }
 
@@ -61,7 +65,8 @@ public with sharing class TaskCalloutService {
                     logsToCreate.add(new Log__c(
                             objectionproof__Level__c = 'WARN',
                             objectionproof__Message__c = 'Skipping Task due to blank token. Task Id: ' + task.Id,
-                            objectionproof__Context__c = context
+                            objectionproof__Context__c = context,
+                            objectionproof__Triggering_User__c = triggeringUserId // Add user to log
                         ));
                     continue; // Skip if token generation failed for some reason.
                 }
@@ -93,7 +98,8 @@ public with sharing class TaskCalloutService {
                 logsToCreate.add(new Log__c(
                         objectionproof__Level__c = 'DEBUG',
                         objectionproof__Message__c = 'Sending request for Task Id: ' + task.Id + '. Body: ' + requestBody,
-                        objectionproof__Context__c = context
+                        objectionproof__Context__c = context,
+                        objectionproof__Triggering_User__c = triggeringUserId // Add user to log
                     ));
     
                 // ... (The rest of the Http().send(req) logic remains the same as previous version)
@@ -107,7 +113,8 @@ public with sharing class TaskCalloutService {
                     logsToCreate.add(new Log__c(
                         objectionproof__Level__c = 'ERROR',
                         objectionproof__Message__c = errorMessage,
-                        objectionproof__Context__c = context
+                        objectionproof__Context__c = context,
+                        objectionproof__Triggering_User__c = triggeringUserId // Add user to log
                     ));
                 }
             }
@@ -117,14 +124,16 @@ public with sharing class TaskCalloutService {
             logsToCreate.add(new Log__c(
                     objectionproof__Level__c = 'ERROR',
                     objectionproof__Message__c = errorMessage,
-                    objectionproof__Context__c = context
+                    objectionproof__Context__c = context,
+                    objectionproof__Triggering_User__c = triggeringUserId // Add user to log
                 ));
         }
 
         logsToCreate.add(new Log__c(
             objectionproof__Level__c = 'INFO',
             objectionproof__Message__c = 'Callout process finished.',
-            objectionproof__Context__c = context
+            objectionproof__Context__c = context,
+            objectionproof__Triggering_User__c = triggeringUserId // Add user to log
         ));
 
         // --- NEW: Perform all logging in a single, safe DML operation at the end ---

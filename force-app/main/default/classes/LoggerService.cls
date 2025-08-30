@@ -16,12 +16,15 @@ public with sharing class LoggerService {
         insertLogsNow(logsAsJson);
     }
 
+    // --- THIS IS THE CORRECTED METHOD ---
     public static void log(String level, String message, String context) {
+        // Now, this helper method also captures the triggering user's ID.
         log(new List<Log__c>{
             new Log__c(
                 objectionproof__Level__c = level,
                 objectionproof__Message__c = message,
-                objectionproof__Context__c = context
+                objectionproof__Context__c = context,
+                objectionproof__Triggering_User__c = UserInfo.getUserId()
             )
         });
     }
