@@ -4,31 +4,31 @@
     <hasActivationRequired>false</hasActivationRequired>
     <label>Objection Proof AI Permission Set</label>
     <classAccesses>
-        <apexClass>objectionproof__TaskCallbackService</apexClass>
+        <apexClass>TaskCallbackService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>objectionproof__TaskCallbackServiceTest</apexClass>
+        <apexClass>TaskCallbackServiceTest</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>objectionproof__TaskCalloutService</apexClass>
+        <apexClass>TaskCalloutService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>objectionproof__TaskCalloutServiceTest</apexClass>
+        <apexClass>TaskCalloutServiceTest</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>objectionproof__TaskTriggerHandler</apexClass>
+        <apexClass>TaskTriggerHandler</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>objectionproof__TaskTriggerHandlerTest</apexClass>
+        <apexClass>TaskTriggerHandlerTest</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <externalCredentialPrincipalAccesses>
         <enabled>true</enabled>
-        <externalCredentialPrincipal>objectionproof__objproof_extcred-Principal</externalCredentialPrincipal>
+        <externalCredentialPrincipal>objproof_extcred-Principal</externalCredentialPrincipal>
     </externalCredentialPrincipalAccesses>
 </PermissionSet>
