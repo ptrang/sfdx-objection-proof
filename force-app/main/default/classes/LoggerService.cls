@@ -1,6 +1,5 @@
 public with sharing class LoggerService {
 
-    // --- NEW: Synchronous method for direct insertion, especially for tests ---
     private static void insertLogsNow(String logsAsJson) {
         try {
             List<Log__c> logsToInsert = (List<Log__c>) JSON.deserialize(logsAsJson, List<Log__c>.class);
@@ -26,27 +25,23 @@ public with sharing class LoggerService {
             )
         });
     }
-    
+
     public static void log(List<Log__c> logs) {
         if (!SettingsService.getBoolean('Logging_Enabled')) {
             return;
         }
-
         if (logs == null || logs.isEmpty()) {
             return;
         }
 
         String logsAsJson = JSON.serialize(logs);
 
-        // --- NEW, TEST-AWARE LOGIC ---
         if (Test.isRunningTest()) {
-            // In a test, always insert synchronously so assertions can find the records.
             insertLogsNow(logsAsJson);
         } else if (System.isFuture() || System.isBatch() || System.isQueueable()) {
-            // In a production async context, enqueue a new job to separate the transaction.
-            System.enqueueJob(new LogQueueable(logsAsJson));
+            // This is now safe because it happens AFTER the callouts.
+            insertLogsNow(logsAsJson);
         } else {
-            // In a production sync context, use a future method.
             createLogsAsync(logsAsJson);
         }
     }

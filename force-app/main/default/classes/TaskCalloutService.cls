@@ -2,19 +2,23 @@ public with sharing class TaskCalloutService {
 
     @future(callout=true)
     public static void sendRecordingUrls(Set<Id> taskIds) {
+        List<Log__c> logsToCreate = new List<Log__c>();
         String context = 'TaskCalloutService.sendRecordingUrls';
 
         // Query for the tasks to get the token we just generated.
-        LoggerService.log('INFO', 'Starting callout process for ' + taskIds.size() + ' tasks [' + String.valueOf(new List<Id>(taskIds)) + '].', context); 
+        logsToCreate.add(new Log__c(
+            objectionproof__Level__c = 'INFO',
+            objectionproof__Message__c = 'Starting callout process for ' + taskIds.size() + ' tasks.',
+            objectionproof__Context__c = context
+        ));
         List<Task> tasksToSend = [
             SELECT Id, Subject, op_recording_url__c, op_callback_token__c,
             op_call_to__c, op_call_from__c,
             WhoId, Who.Name, OwnerId, Owner.Name
             FROM Task WHERE Id IN :taskIds
         ];
-        LoggerService.log('INFO', 'Retrieved tasksToSend: ' + String.valueOf(tasksToSend), context);
 
-        // --- NEW LOGIC TO DETECT DELETED TASKS ---
+        // --- log deleted tasks ---
         if (tasksToSend.size() != taskIds.size()) {
             // Create a Set of the IDs that were successfully found.
             Set<Id> foundTaskIds = new Set<Id>();
@@ -27,7 +31,11 @@ public with sharing class TaskCalloutService {
             missingTaskIds.removeAll(foundTaskIds);
 
             // Log a specific warning about the missing tasks.
-            LoggerService.log('WARN', 'The following Task IDs were not found (likely deleted before callout execution): ' + String.valueOf(new List<Id>(missingTaskIds)), context);
+            logsToCreate.add(new Log__c(
+                objectionproof__Level__c = 'WARN',
+                objectionproof__Message__c = 'Missing Tasks (likely deleted): ' + String.valueOf(new List<Id>(missingTaskIds)),
+                objectionproof__Context__c = context
+            ));
         }
 
         // Get the base URL of our public site.
@@ -50,7 +58,11 @@ public with sharing class TaskCalloutService {
         try {
             for (Task task : tasksToSend) {
                 if (String.isBlank(task.op_callback_token__c)) {
-                    LoggerService.log('WARN', 'Skipping Task due to blank token. Task Id: ' + task.Id, context);
+                    logsToCreate.add(new Log__c(
+                            objectionproof__Level__c = 'WARN',
+                            objectionproof__Message__c = 'Skipping Task due to blank token. Task Id: ' + task.Id,
+                            objectionproof__Context__c = context
+                        ));
                     continue; // Skip if token generation failed for some reason.
                 }
     
@@ -78,7 +90,11 @@ public with sharing class TaskCalloutService {
                 String requestBody = JSON.serialize(bodyMap);
                 req.setBody(requestBody);
     
-                LoggerService.log('DEBUG', 'Sending request for Task Id: ' + task.Id + '. Body: ' + requestBody, context);
+                logsToCreate.add(new Log__c(
+                        objectionproof__Level__c = 'DEBUG',
+                        objectionproof__Message__c = 'Sending request for Task Id: ' + task.Id + '. Body: ' + requestBody,
+                        objectionproof__Context__c = context
+                    ));
     
                 // ... (The rest of the Http().send(req) logic remains the same as previous version)
                 // ... (No need to process response here anymore)
@@ -88,14 +104,30 @@ public with sharing class TaskCalloutService {
                 } catch (Exception e) {
                     // This is the most critical log entry. It captures the error.
                     String errorMessage = 'Outbound callout failed for Task Id: ' + task.Id + '. Error: ' + e.getMessage() + '\n' + e.getStackTraceString();
-                    LoggerService.log('ERROR', errorMessage, context);
+                    logsToCreate.add(new Log__c(
+                        objectionproof__Level__c = 'ERROR',
+                        objectionproof__Message__c = errorMessage,
+                        objectionproof__Context__c = context
+                    ));
                 }
             }
         } catch (Exception e) {
             // This is the most critical log entry. It captures the error.
             String errorMessage = 'Failed in the task array for loop. Error: ' + e.getMessage() + '\n' + e.getStackTraceString();
-            LoggerService.log('ERROR', errorMessage, context);
+            logsToCreate.add(new Log__c(
+                    objectionproof__Level__c = 'ERROR',
+                    objectionproof__Message__c = errorMessage,
+                    objectionproof__Context__c = context
+                ));
         }
-        
+
+        logsToCreate.add(new Log__c(
+            objectionproof__Level__c = 'INFO',
+            objectionproof__Message__c = 'Callout process finished.',
+            objectionproof__Context__c = context
+        ));
+
+        // --- NEW: Perform all logging in a single, safe DML operation at the end ---
+        LoggerService.log(logsToCreate);
     }
 }
