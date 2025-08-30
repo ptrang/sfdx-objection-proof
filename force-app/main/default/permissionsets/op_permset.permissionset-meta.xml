@@ -27,8 +27,4 @@
         <apexClass>TaskTriggerHandlerTest</apexClass>
         <enabled>true</enabled>
     </classAccesses>
-    <externalCredentialPrincipalAccesses>
-        <enabled>true</enabled>
-        <externalCredentialPrincipal>objproof_extcred-Principal</externalCredentialPrincipal>
-    </externalCredentialPrincipalAccesses>
 </PermissionSet>
