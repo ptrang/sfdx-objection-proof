@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Log</label>
+    <pluralLabel>Logs</pluralLabel>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <sharingModel>ReadWrite</sharingModel>
+    <nameField>
+        <label>Log Number</label>
+        <type>AutoNumber</type>
+    </nameField>
+</CustomObject>
