@@ -3,6 +3,7 @@
     <fullName>Logging_Enabled__c</fullName>
     <defaultValue>false</defaultValue>
     <externalId>false</externalId>
+    <fieldManageability>DeveloperControlled</fieldManageability>
     <label>Logging Enabled</label>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
