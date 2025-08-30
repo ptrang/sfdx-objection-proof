@@ -1,8 +1,8 @@
 {
   "packageDirectories": [
     {
-      "versionName": "ver 1.3",
-      "versionNumber": "1.3.0.NEXT",
+      "versionName": "ver 1.4",
+      "versionNumber": "1.4.0.NEXT",
       "ancestorVersion": "HIGHEST",
       "path": "force-app",
       "default": true,
@@ -31,6 +31,7 @@
     "Objection Proof@1.0.0-2": "04tgL0000005qIvQAI",
     "Objection Proof@1.1.0-1": "04tgL0000005qKXQAY",
     "Objection Proof@1.2.0-1": "04tgL0000005qVpQAI",
-    "Objection Proof@1.3.0-1": "04tgL0000005qXRQAY"
+    "Objection Proof@1.3.0-1": "04tgL0000005qXRQAY",
+    "Objection Proof@1.4.0-1": "04tgL0000005qZ3QAI"
   }
 }
