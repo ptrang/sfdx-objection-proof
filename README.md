@@ -52,12 +52,13 @@ This project demonstrates a robust, asynchronous integration pattern. When a Tas
 
 ## Configuring Logging
 
-This package includes a custom logging framework to help diagnose issues within a subscriber's environment. Logging is **disabled by default** to conserve data storage.
+This package includes a custom logging framework to help diagnose issues. Logging is **disabled by default**. To enable it, you must create a configuration record.
 
-To enable logging:
+1.  Go to **Setup** -> **Custom Metadata Types**.
+2.  Click **Manage Records** next to **Log Configuration**.
+3.  Click **New**.
+4.  For the **Label** and **Log Configuration Name**, enter `Default`.
+5.  Check the **Logging Enabled** checkbox.
+6.  Click **Save**.
 
-* Go to **Setup** -> **Custom Settings**.
-* Click **Manage** next to **Logging Settings**.
-* Click **New** to create a new org-wide default setting.
-* Check the **Logging Enabled** checkbox.
-* Click **Save**.
+To disable logging at any time, you can return to this record and uncheck the "Logging Enabled" box.

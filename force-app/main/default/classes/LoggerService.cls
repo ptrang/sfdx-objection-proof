@@ -1,27 +1,18 @@
 public with sharing class LoggerService {
 
-    // By making this variable @TestVisible, our test class can set it directly.
     @TestVisible
     private static Boolean isLoggingEnabled;
 
-    // Use a static block to query the setting once per transaction.
-    // This runs in normal execution but can be bypassed by the test.
     static {
-        // We check if we are in a test context. If not, we query the setting.
+        // This logic now runs only in a non-test context.
         if (!Test.isRunningTest()) {
-            try {
-                Log_Configuration__mdt config = [
-                    SELECT Logging_Enabled__c
-                    FROM Log_Configuration__mdt
-                    WHERE DeveloperName = 'Default'
-                    LIMIT 1
-                ];
-                isLoggingEnabled = (config != null && config.Logging_Enabled__c);
-            } catch (QueryException e) {
-                // If the query fails for any reason, default to logging being off.
-                isLoggingEnabled = false;
-                System.debug('LoggerService static init failed: ' + e.getMessage());
-            }
+            List<Log_Configuration__mdt> configs = [
+                SELECT Logging_Enabled__c
+                FROM Log_Configuration__mdt
+                LIMIT 1
+            ];
+            // If a record exists and is enabled, turn logging on. Otherwise, it's off.
+            isLoggingEnabled = (!configs.isEmpty() && configs[0].Logging_Enabled__c);
         }
     }
 
@@ -52,17 +43,8 @@ public with sharing class LoggerService {
     }
     
     public static void log(List<Log__c> logs) {
-        // Now, this check uses the value set by the test or by the static block.
-        if (isLoggingEnabled != true) { // Explicitly check for true
-            return;
-        }
-
-        if (logs == null || logs.isEmpty()) {
-            return;
-        }
-
-        // Check the cached static variable.
-        if (!isLoggingEnabled) {
+        // The check now uses the static variable, which is safely initialized.
+        if (isLoggingEnabled != true) {
             return;
         }
 
