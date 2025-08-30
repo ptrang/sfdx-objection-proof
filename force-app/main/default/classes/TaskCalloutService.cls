@@ -1,71 +1,56 @@
-public with sharing class TaskCalloutService {
+public class TaskCalloutService implements Queueable, Database.AllowsCallouts {
 
-    @future(callout=true)
-    public static void sendRecordingUrls(Set<Id> taskIds) {
+    private final Set<Id> taskIds;
+    private final String secureSiteUrl;
+
+    // The constructor now accepts the data from the trigger
+    public TaskCalloutService(Set<Id> taskIds, String secureSiteUrl) {
+        this.taskIds = taskIds;
+        this.secureSiteUrl = secureSiteUrl;
+    }
+
+    public void execute(QueueableContext context) {
+        // --- The rest of the logic is moved inside the execute method ---
         Id triggeringUserId = UserInfo.getUserId();
 
         List<Log__c> logsToCreate = new List<Log__c>();
-        String context = 'TaskCalloutService.sendRecordingUrls';
-
-        // Query for the tasks to get the token we just generated.
+        String logContext = 'TaskCalloutService.execute';
+        
         logsToCreate.add(new Log__c(
             objectionproof__Level__c = 'INFO',
             objectionproof__Message__c = 'Starting callout process for ' + taskIds.size() + ' tasks.',
-            objectionproof__Context__c = context,
+            objectionproof__Context__c = logContext,
             objectionproof__Triggering_User__c = triggeringUserId // Add user to log
         ));
+
         List<Task> tasksToSend = [
-            SELECT Id, Subject, op_recording_url__c, op_callback_token__c,
-            op_call_to__c, op_call_from__c,
-            WhoId, Who.Name, OwnerId, Owner.Name
+            SELECT Id, Subject, objectionproof__op_recording_url__c, objectionproof__op_callback_token__c,
+                   objectionproof__op_call_to__c, objectionproof__op_call_from__c,
+                   WhoId, Who.Name, OwnerId, Owner.Name
             FROM Task WHERE Id IN :taskIds
         ];
 
-        // --- log deleted tasks ---
+        // This check is still valuable for detecting tasks deleted by other means
         if (tasksToSend.size() != taskIds.size()) {
-            // Create a Set of the IDs that were successfully found.
-            Set<Id> foundTaskIds = new Set<Id>();
-            for (Task t : tasksToSend) {
-                foundTaskIds.add(t.Id);
-            }
-
-            // Find the difference to identify the missing (deleted) Task IDs.
+            Set<Id> foundTaskIds = (new Map<Id, SObject>(tasksToSend)).keySet();
             Set<Id> missingTaskIds = new Set<Id>(taskIds);
             missingTaskIds.removeAll(foundTaskIds);
-
-            // Log a specific warning about the missing tasks.
             logsToCreate.add(new Log__c(
                 objectionproof__Level__c = 'WARN',
-                objectionproof__Message__c = 'Missing Tasks (likely deleted): ' + String.valueOf(new List<Id>(missingTaskIds)),
-                objectionproof__Context__c = context,
+                objectionproof__Message__c = 'Missing Tasks (likely deleted after queuing): ' + String.valueOf(new List<Id>(missingTaskIds)),
+                objectionproof__Context__c = logContext,
                 objectionproof__Triggering_User__c = triggeringUserId // Add user to log
             ));
         }
 
-        // Get the base URL of our public site.
-        // NOTE: The Site Name 'Task_Update_Service' must match the name you created.
-        // had to remove below due to not testable
-        // String callbackBaseUrl;
-        // Site sites = [SELECT Id, GuestUserId, UrlPathPrefix FROM Site WHERE Name = 'Task_Update_Service' LIMIT 1];
-        // if (sites != null) {
-        //     SiteDetail siteDetails = [SELECT Id, DurableId, IsRegistrationEnabled, SecureUrl FROM SiteDetail WHERE DurableId = :sites.Id LIMIT 1];
-        //     callbackBaseUrl = siteDetails.SecureUrl + '/services/apexrest/v1/task-callback/';
-        // } else {
-        //     callbackBaseUrl = '/services/apexrest/v1/task-callback/';
-        // } 
-        // had to remove above since not testable
-        // Dynamically construct the site URL without a query to make it testable.
-        String siteUrl = URL.getOrgDomainUrl().toExternalForm();
-        String sitePath = Site.getPathPrefix(); // Gets '/task-callback'
-        String callbackBaseUrl = siteUrl + sitePath + '/services/apexrest/objectionproof/v1/task-callback/';
-
+        String callbackBaseUrl = this.secureSiteUrl + '/services/apexrest/objectionproof/v1/task-callback/';
         try {
             for (Task task : tasksToSend) {
                 if (String.isBlank(task.op_callback_token__c)) {
                     logsToCreate.add(new Log__c(
                             objectionproof__Level__c = 'WARN',
                             objectionproof__Message__c = 'Skipping Task due to blank token. Task Id: ' + task.Id,
-                            objectionproof__Context__c = context,
+                            objectionproof__Context__c = logContext,
                             objectionproof__Triggering_User__c = triggeringUserId // Add user to log
                         ));
                     continue; // Skip if token generation failed for some reason.
@@ -98,7 +83,7 @@ public with sharing class TaskCalloutService {
                 logsToCreate.add(new Log__c(
                         objectionproof__Level__c = 'DEBUG',
                         objectionproof__Message__c = 'Sending request for Task Id: ' + task.Id + '. Body: ' + requestBody,
-                        objectionproof__Context__c = context,
+                        objectionproof__Context__c = logContext,
                         objectionproof__Triggering_User__c = triggeringUserId // Add user to log
                     ));
     
@@ -113,7 +98,7 @@ public with sharing class TaskCalloutService {
                     logsToCreate.add(new Log__c(
                         objectionproof__Level__c = 'ERROR',
                         objectionproof__Message__c = errorMessage,
-                        objectionproof__Context__c = context,
+                        objectionproof__Context__c = logContext,
                         objectionproof__Triggering_User__c = triggeringUserId // Add user to log
                     ));
                 }
@@ -124,7 +109,7 @@ public with sharing class TaskCalloutService {
             logsToCreate.add(new Log__c(
                     objectionproof__Level__c = 'ERROR',
                     objectionproof__Message__c = errorMessage,
-                    objectionproof__Context__c = context,
+                    objectionproof__Context__c = logContext,
                     objectionproof__Triggering_User__c = triggeringUserId // Add user to log
                 ));
         }
@@ -132,7 +117,7 @@ public with sharing class TaskCalloutService {
         logsToCreate.add(new Log__c(
             objectionproof__Level__c = 'INFO',
             objectionproof__Message__c = 'Callout process finished.',
-            objectionproof__Context__c = context,
+            objectionproof__Context__c = logContext,
             objectionproof__Triggering_User__c = triggeringUserId // Add user to log
         ));
 

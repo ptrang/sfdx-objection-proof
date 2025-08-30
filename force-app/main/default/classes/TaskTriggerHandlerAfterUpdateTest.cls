@@ -35,6 +35,6 @@ private class TaskTriggerHandlerAfterUpdateTest {
         // for the log records that should have been created by the handler.
         List<objectionproof__Log__c> logs = [SELECT Id, objectionproof__Message__c FROM objectionproof__Log__c WHERE objectionproof__Context__c = 'TaskTriggerHandler.makeCallout'];
         System.assertEquals(1, logs.size(), 'One log record should be created by the makeCallout method.');
-        System.assert(logs[0].objectionproof__Message__c.contains('Successfully queued callout'), 'The log should indicate success.');
+        System.assert(logs[0].objectionproof__Message__c.contains('Successfully enqueued TaskCalloutService job'), 'The log should indicate success.');
     }
 }

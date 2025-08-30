@@ -26,7 +26,25 @@ private class TaskCallbackServiceTest {
 
         req.requestURI = '/services/apexrest/v1/task-callback/VALID-TOKEN-123';
         req.httpMethod = 'PATCH';
-        req.requestBody = Blob.valueOf('{"score": 88.5, "status": "processed"}');
+        
+        // --- UPDATED: Provide a full payload for the test ---
+        String testPayload = '{' +
+            '"salescall_id": "ext-id-123",' +
+            '"transcript": "This is the call transcript...",' +
+            '"evaluation": "This was a good call...",' +
+            '"opening": 9.1,' +
+            '"engagement": 8.2,' +
+            '"nonneedy": 7.3,' +
+            '"guiding": 6.4,' +
+            '"closing": 9.5,' +
+            '"assertiveness": 8.6,' +
+            '"empathy": 7.7,' +
+            '"stories": 6.8,' +
+            '"objection": 9.9,' +
+            '"remorse": 8.0,' +
+            '"score": 95.5' +
+        '}';
+        req.requestBody = Blob.valueOf(testPayload);
 
         RestContext.request = req;
         RestContext.response = res;
@@ -35,12 +53,18 @@ private class TaskCallbackServiceTest {
         TaskCallbackService.updateTaskScore();
         Test.stopTest();
 
-        System.assertEquals(204, res.statusCode);
+        System.assertEquals(204, res.statusCode, 'Status code should be 204 for a successful update.');
 
-        // Verify the record was updated correctly
-        Task updatedTask = [SELECT op_call_score__c, op_callback_token__c FROM Task WHERE op_callback_token__c = NULL AND Subject = 'Test for callback' LIMIT 1];
-        System.assertEquals(88.5, updatedTask.op_call_score__c);
-        System.assertEquals(null, updatedTask.op_callback_token__c, 'Token should be nullified after use.');
+        // --- UPDATED: Verify all new fields are updated correctly ---
+        Task updatedTask = [
+            SELECT objectionproof__op_salescall_id__c, objectionproof__op_transcript__c, objectionproof__op_evaluation__c,
+                   objectionproof__op_call_revenue__c, objectionproof__op_call_score_opening__c, objectionproof__op_call_score__c
+            FROM Task WHERE objectionproof__op_callback_token__c = NULL AND Subject = 'Test for callback' LIMIT 1
+        ];
+        
+        System.assertEquals('ext-id-123', updatedTask.objectionproof__op_salescall_id__c);
+        System.assertEquals(9.1, updatedTask.objectionproof__op_call_score_opening__c);
+        System.assertEquals(95.5, updatedTask.objectionproof__op_call_score__c);
     }
 
     @IsTest
