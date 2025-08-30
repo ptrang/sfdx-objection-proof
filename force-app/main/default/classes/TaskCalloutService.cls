@@ -2,15 +2,17 @@ public with sharing class TaskCalloutService {
 
     @future(callout=true)
     public static void sendRecordingUrls(Set<Id> taskIds) {
+        String context = 'TaskCalloutService.sendRecordingUrls';
+
         // Query for the tasks to get the token we just generated.
-        LoggerService.log('INFO', 'taskIds ' + String.valueOf(new List<Id>(taskIds)), 'TaskCalloutService.sendRecordingUrls');
+        LoggerService.log('INFO', 'Starting callout process for ' + taskIds.size() + ' tasks [' + String.valueOf(new List<Id>(taskIds)) + '].', context); 
         List<Task> tasksToSend = [
             SELECT Id, Subject, op_recording_url__c, op_callback_token__c,
             op_call_to__c, op_call_from__c,
             WhoId, Who.Name, OwnerId, Owner.Name
             FROM Task WHERE Id IN :taskIds
         ];
-        LoggerService.log('INFO', 'tasksToSend ' + String.valueOf(new List<Task>(tasksToSend)), 'TaskCalloutService.sendRecordingUrls');
+        LoggerService.log('INFO', 'Retrieved tasksToSend: ' + String.valueOf(tasksToSend), context);
 
         // Get the base URL of our public site.
         // NOTE: The Site Name 'Task_Update_Service' must match the name you created.
@@ -31,6 +33,7 @@ public with sharing class TaskCalloutService {
 
         for (Task task : tasksToSend) {
             if (String.isBlank(task.op_callback_token__c)) {
+                LoggerService.log('WARN', 'Skipping Task due to blank token. Task Id: ' + task.Id, context);
                 continue; // Skip if token generation failed for some reason.
             }
 
