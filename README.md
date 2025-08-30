@@ -49,3 +49,15 @@ This project demonstrates a robust, asynchronous integration pattern. When a Tas
     * The `Callback Token` field should auto-populate upon saving.
     * Use a tool like Postman or `curl` to simulate the external service's callback. Make a `PATCH` request to your Site URL (`https://YOUR_SITE_DOMAIN/taskcallback/services/apexrest/objectionproof/v1/task-callback/{THE_TOKEN_VALUE}`) with a body like `{"score": 95}`.
     * Verify the `Call Score` on the Task is updated and the `Callback Token` is now blank.
+
+## Configuring Logging
+
+This package includes a custom logging framework to help diagnose issues within a subscriber's environment. Logging is **disabled by default** to conserve data storage.
+
+To enable logging:
+
+* Go to **Setup** -> **Custom Settings**.
+* Click **Manage** next to **Logging Settings**.
+* Click **New** to create a new org-wide default setting.
+* Check the **Logging Enabled** checkbox.
+* Click **Save**.
