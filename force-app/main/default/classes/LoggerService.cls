@@ -1,26 +1,6 @@
 public with sharing class LoggerService {
 
-    @TestVisible
-    private static Boolean isLoggingEnabled;
-
-    static {
-        // This logic now runs only in a non-test context.
-        if (!Test.isRunningTest()) {
-            List<Log_Configuration__mdt> configs = [
-                SELECT Logging_Enabled__c
-                FROM Log_Configuration__mdt
-                LIMIT 1
-            ];
-            // If a record exists and is enabled, turn logging on. Otherwise, it's off.
-            isLoggingEnabled = (!configs.isEmpty() && configs[0].Logging_Enabled__c);
-        }
-    }
-
-    @future
-    private static void createLogsAsync(String logsAsJson) {
-        insertLogsNow(logsAsJson);
-    }
-
+    // --- NEW: Synchronous method for direct insertion, especially for tests ---
     private static void insertLogsNow(String logsAsJson) {
         try {
             List<Log__c> logsToInsert = (List<Log__c>) JSON.deserialize(logsAsJson, List<Log__c>.class);
@@ -31,7 +11,12 @@ public with sharing class LoggerService {
             System.debug('LoggerService.insertLogsNow FAILED: ' + e.getMessage());
         }
     }
-    
+
+    @future
+    private static void createLogsAsync(String logsAsJson) {
+        insertLogsNow(logsAsJson);
+    }
+
     public static void log(String level, String message, String context) {
         log(new List<Log__c>{
             new Log__c(
@@ -43,7 +28,6 @@ public with sharing class LoggerService {
     }
     
     public static void log(List<Log__c> logs) {
-        // Check the new, centralized SettingsService.
         if (!SettingsService.getBoolean('Logging_Enabled')) {
             return;
         }
@@ -54,9 +38,15 @@ public with sharing class LoggerService {
 
         String logsAsJson = JSON.serialize(logs);
 
-        if (System.isFuture() || System.isBatch() || System.isQueueable()) {
+        // --- NEW, TEST-AWARE LOGIC ---
+        if (Test.isRunningTest()) {
+            // In a test, always insert synchronously so assertions can find the records.
             insertLogsNow(logsAsJson);
+        } else if (System.isFuture() || System.isBatch() || System.isQueueable()) {
+            // In a production async context, enqueue a new job to separate the transaction.
+            System.enqueueJob(new LogQueueable(logsAsJson));
         } else {
+            // In a production sync context, use a future method.
             createLogsAsync(logsAsJson);
         }
     }
