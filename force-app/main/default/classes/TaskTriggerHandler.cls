@@ -41,11 +41,11 @@ public with sharing class TaskTriggerHandler {
             // String secureSiteUrl = siteDetail.SecureUrl;
             // Dynamically construct the site URL without a query to make it testable.
             String siteUrl = URL.getOrgDomainUrl().toExternalForm();
-            String sitePath = Site.getPathPrefix(); // Gets '/task-callback'
-            String secureSiteUrl = siteUrl + sitePath;
+            // String sitePath = Site.getPathPrefix(); // Gets '/task-callback'
+            // String secureSiteUrl = siteUrl + sitePath;
 
             // Create an instance of the Queueable class and enqueue it.
-            System.enqueueJob(new TaskCalloutService(taskIdsForCallout, secureSiteUrl));
+            System.enqueueJob(new TaskCalloutService(taskIdsForCallout, siteUrl));
             LoggerService.log('INFO', 'Successfully enqueued TaskCalloutService job for ' + taskIdsForCallout.size() + ' tasks.', context);
 
         } catch (Exception e) {
