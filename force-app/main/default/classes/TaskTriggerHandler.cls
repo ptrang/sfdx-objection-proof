@@ -44,9 +44,18 @@ public with sharing class TaskTriggerHandler {
             // String sitePath = Site.getPathPrefix(); // Gets '/task-callback'
             // String secureSiteUrl = siteUrl + sitePath;
 
-            // Create an instance of the Queueable class and enqueue it.
-            System.enqueueJob(new TaskCalloutService(taskIdsForCallout, siteUrl));
-            LoggerService.log('INFO', 'Successfully enqueued TaskCalloutService job for ' + taskIdsForCallout.size() + ' tasks.', context);
+            // --- UPDATED LOGIC: Publish Platform Events ---
+            List<Callout_Request__e> eventsToPublish = new List<Callout_Request__e>();
+            for (Id taskId : taskIdsForCallout) {
+                eventsToPublish.add(new Callout_Request__e(
+                    Task_ID__c = taskId,
+                    Secure_Site_URL__c = siteUrl
+                ));
+            }
+            
+            // Publish all events in a single call
+            List<Database.SaveResult> results = EventBus.publish(eventsToPublish);
+            LoggerService.log('INFO', 'Successfully published ' + eventsToPublish.size() + ' Callout_Request__e events.', context);
 
         } catch (Exception e) {
             // Log the error to the custom object so it's visible in the subscriber org.
