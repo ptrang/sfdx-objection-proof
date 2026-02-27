@@ -1,5 +1,5 @@
 @RestResource(urlMapping='/v1/task-callback/*')
-global with sharing class TaskCallbackService {
+global without sharing class TaskCallbackService {
 
     // Helper class to parse the incoming JSON body
     private class ScorePayload {

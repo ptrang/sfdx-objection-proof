@@ -28,11 +28,19 @@ public with sharing class TaskTriggerHandler {
         }
     }
 
+    private static String getCallbackBaseUrl() {
+        List<Site> sites = [SELECT SecureURL FROM Site WHERE UrlPathPrefix = 'objproof' AND Status = 'Active' LIMIT 1];
+        if (!sites.isEmpty()) {
+            return sites[0].SecureURL;
+        }
+        return URL.getOrgDomainUrl().toExternalForm();
+    }
+
     private static void publishEvent(Set<Id> taskIdsForCallout) {
         String context = 'TaskTriggerHandler.publishEvent';
 
         try {
-            String orgUrl = URL.getOrgDomainUrl().toExternalForm();
+            String orgUrl = getCallbackBaseUrl();
 
             List<TaskCalloutEvent__e> events = new List<TaskCalloutEvent__e>();
             for (Id taskId : taskIdsForCallout) {

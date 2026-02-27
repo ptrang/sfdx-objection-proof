@@ -7,7 +7,8 @@
       "path": "force-app",
       "default": true,
       "package": "Objection Proof",
-      "versionDescription": "Coaching and analysis on your sales calls to improve process"
+      "versionDescription": "Coaching and analysis on your sales calls to improve process",
+      "postInstallClass": "PostInstallScript"
     }
   ],
   "name": "sfdx-objection-proof",
