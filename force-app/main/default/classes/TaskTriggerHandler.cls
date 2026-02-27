@@ -16,41 +16,53 @@ public with sharing class TaskTriggerHandler {
         Set<Id> taskIdsForCallout = new Set<Id>();
         for (Task newTask : newTasks) {
             Task oldTask = oldTaskMap.get(newTask.Id);
-            
+
             if (newTask.op_callback_token__c != null && oldTask.op_callback_token__c == null) {
                 taskIdsForCallout.add(newTask.Id);
             }
         }
 
         if (!taskIdsForCallout.isEmpty()) {
-            LoggerService.log('INFO', 'Preparing to make callout for Task Ids: ' + String.valueOf(new List<Id>(taskIdsForCallout)), 'TaskTriggerHandler.onAfterUpdate');
-            makeCallout(taskIdsForCallout);
+            LoggerService.log('INFO', 'Preparing to publish callout event for Task Ids: ' + String.valueOf(new List<Id>(taskIdsForCallout)), 'TaskTriggerHandler.onAfterUpdate');
+            publishEvent(taskIdsForCallout);
         }
     }
 
-    
-    private static void makeCallout(Set<Id> taskIdsForCallout) {
-        List<Log__c> logsToCreate = new List<Log__c>();
-        String context = 'TaskTriggerHandler.makeCallout';
-        
-        try {
-            // Get the base URL of our public site.
-            // NOTE: The Site Name 'Task_Update_Service' must match the name you created.
-            // Site site = [SELECT Id FROM Site WHERE Name = 'Task_Update_Service' AND Status = 'Active' LIMIT 1];
-            // SiteDetail siteDetail = [SELECT SecureUrl FROM SiteDetail WHERE DurableId = :site.Id LIMIT 1];
-            // String secureSiteUrl = siteDetail.SecureUrl;
-            // Dynamically construct the site URL without a query to make it testable.
-            String siteUrl = URL.getOrgDomainUrl().toExternalForm();
-            // String sitePath = Site.getPathPrefix(); // Gets '/task-callback'
-            // String secureSiteUrl = siteUrl + sitePath;
+    private static void publishEvent(Set<Id> taskIdsForCallout) {
+        String context = 'TaskTriggerHandler.publishEvent';
 
-            // Create an instance of the Queueable class and enqueue it.
-            System.enqueueJob(new TaskCalloutService(taskIdsForCallout, siteUrl));
-            LoggerService.log('INFO', 'Successfully enqueued TaskCalloutService job for ' + taskIdsForCallout.size() + ' tasks.', context);
+        try {
+            String orgUrl = URL.getOrgDomainUrl().toExternalForm();
+
+            List<TaskCalloutEvent__e> events = new List<TaskCalloutEvent__e>();
+            for (Id taskId : taskIdsForCallout) {
+                events.add(new TaskCalloutEvent__e(
+                    TaskId__c = taskId,
+                    OrgUrl__c = orgUrl
+                ));
+            }
+
+            List<Database.SaveResult> results = EventBus.publish(events);
+
+            Integer successCount = 0;
+            for (Database.SaveResult result : results) {
+                if (!result.isSuccess()) {
+                    String errorMsg = 'Failed to publish TaskCalloutEvent: ';
+                    for (Database.Error err : result.getErrors()) {
+                        errorMsg += err.getMessage() + ' ';
+                    }
+                    LoggerService.log('ERROR', errorMsg, context);
+                } else {
+                    successCount++;
+                }
+            }
+
+            if (successCount > 0) {
+                LoggerService.log('INFO', 'Successfully published ' + successCount + ' TaskCalloutEvent(s).', context);
+            }
 
         } catch (Exception e) {
-            // Log the error to the custom object so it's visible in the subscriber org.
-            String errorMessage = 'Error finding Site or queuing callout: ' + e.getMessage() + '\n' + e.getStackTraceString();
+            String errorMessage = 'Error publishing TaskCalloutEvent: ' + e.getMessage() + '\n' + e.getStackTraceString();
             LoggerService.log('ERROR', errorMessage, context);
         }
     }
