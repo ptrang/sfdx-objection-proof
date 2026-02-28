@@ -1,71 +1,160 @@
-# Salesforce Task Webhook Callback Architecture
+# Objection Proof — Salesforce Managed Package
 
-This project demonstrates a robust, asynchronous integration pattern. When a Task's `objectionproof__op_recording_url__c` is populated, Salesforce calls an external service and provides it with a unique, secure, single-use callback URL (a webhook). Once the external service finishes its processing, it calls this URL back to update the original Task with a `objectionproof__op_call_score__c`.
+Salesforce managed package (namespace: `objectionproof`) that integrates with an external AI service to score sales calls. When a Task's recording URL is set, Salesforce sends the recording to the external service and receives scored results back via a secure webhook callback.
 
 ## How It Works
 
-![Webhook Callback Flow](https://i.imgur.com/8QG34X5.png)
+```
+Task updated (recording URL set)
+  → TaskTrigger (before update)
+      → generates AES-128 single-use callback token
+  → TaskTrigger (after update)
+      → publishes TaskCalloutEvent__e platform event
+  → TaskCalloutEventTrigger
+      → enqueues TaskCalloutService (runs as Automated Process user)
+  → TaskCalloutService
+      → HTTP POST to external service (named credential)
+      → payload includes callbackUrl: https://[org].my.site.com/objproof/services/apexrest/objectionproof/v1/task-callback/{token}
+  → External service processes recording, then:
+      → PATCH /services/apexrest/objectionproof/v1/task-callback/{token}
+  → TaskCallbackService
+      → validates token, updates Task with scores, nullifies token (single-use)
+```
 
-1.  **Trigger Fires (`before update`)**: A user updates a Task with a `objectionproof__op_recording_url__c`. The `before update` trigger fires.
-2.  **Token Generation**: The `TaskTriggerHandler` generates a cryptographically secure, unique token and saves it in the `Task.objectionproof__op_callback_token__c` field before the record is committed to the database.
-3.  **Asynchronous Callout (`after update`)**: After the record saves, the `after update` trigger fires and calls the `TaskCalloutService` future method.
-4.  **Outbound POST**: This service sends the `objectionproof__op_recording_url__c` **and** the newly generated `callbackUrl` (e.g., `https://my-site.my.salesforce-sites.com/services/apexrest/objectionproof/v1/task-callback/{token}`) to the external system.
-5.  **External Processing**: The external system processes the recording at its own pace.
-6.  **Inbound Webhook Callback**: Once finished, the external system makes a `PATCH` request to the `callbackUrl` it received, including the score in the JSON body (e.g., `{"score": 95}`).
-7.  **Apex REST Service**: The public `TaskCallbackService` receives this request. It uses the token from the URL to find the correct Task.
-8.  **Secure Update**: The service updates the Task's `objectionproof__op_call_score__c` and simultaneously **nullifies the `objectionproof__op_callback_token__c`** to make the URL single-use.
+The inbound callback uses a **Salesforce Site** (guest user access) — the external service does **not** need OAuth credentials to call back. The AES-128 token in the URL is the sole authentication mechanism.
 
-## Setup Instructions
+---
 
-**This architecture requires a Salesforce Site.**
+## Installation
 
-1.  **Install the Package**: Install the managed package into your org.
+### 1. Install the managed package
 
-2.  **Create a Salesforce Site**:
-    * Go to **Setup -> User Interface -> Sites and Domains -> Sites**.
-    * If you don't have a domain, register one.
-    * Click **New** to create a new Site.
-    * **Label**: `Task Update Service`
-    * **Name**: `Task_Update_Service`
-    * **Default Web Address**: `taskcallback` (or a name of your choice)
-    * **Active Site Home Page**: Choose any Visualforce page (e.g., `Unauthorized`); it doesn't matter for this REST service.
-    * Check the **Active** box and **Save**.
+Install the latest package version into your org. The package automatically:
+- Creates the `ObjProof` Salesforce Site (inactive)
+- Assigns the site guest user permission set (Task read/edit + class access)
 
-3.  **Configure Public Access Settings**:
-    * On the Site Details page, click **Public Access Settings**.
-    * Under **Enabled Apex Class Access**, click **Edit**.
-    * Add `objectionproof.TaskCallbackService` to the list of enabled classes and **Save**.
-    * Go back to the profile and find **Object Settings**.
-    * Select **Tasks**. Click **Edit**.
-    * Give the profile **Edit** access to the Task object.
-    * Under Field Permissions, grant **Edit Access** to the `Call Score` and `Callback Token` fields. **Save**.
+### 2. Activate the ObjProof Site
 
-4.  **Update Named Credential**:
-    * Go to **Setup -> Security -> Named Credentials**.
-    * Edit the `objectionproof__objproof_namedcred` and provide the real URL for your external processing service.
+The site is deployed inactive because the site admin cannot be set during package installation.
 
-5.  **Test**:
-    * Create or update a Task with a `Recording URL`.
-    * The `Callback Token` field should auto-populate upon saving.
-    * Use a tool like Postman or `curl` to simulate the external service's callback. Make a `PATCH` request to your Site URL (`https://YOUR_SITE_DOMAIN/taskcallback/services/apexrest/objectionproof/v1/task-callback/{THE_TOKEN_VALUE}`) with a body like `{"score": 95}`.
-    * Verify the `Call Score` on the Task is updated and the `Callback Token` is now blank.
+1. Go to **Setup → User Interface → Sites and Domains → Sites**
+2. Find **ObjProof** and click **Activate**
+3. Confirm the site is now **Active**
+
+The callback URL your external service will receive is:
+```
+https://[your-org-domain].my.site.com/objproof/services/apexrest/objectionproof/v1/task-callback/{token}
+```
+
+### 3. Assign the Automation Permission Set to the Automated Process User
+
+The outbound HTTP callout to the external service runs as the **Automated Process** user (via platform events). This user needs access to the named credential.
+
+1. Go to **Setup → Users → Users**
+2. In the **View** dropdown, select **Automated Process User** and click **Go**
+3. Click on the **Automated Process** user
+4. Under **Permission Set Assignments**, click **Edit Assignments**
+5. Add **Objection Proof Automation Permission Set** (`objproof_automation_permission_set`)
+6. Click **Save**
+
+### 4. Configure the Named Credential
+
+The named credential holds the URL for the external AI service that processes recordings.
+
+1. Go to **Setup → Security → Named Credentials**
+2. Find **objproof_namedcred** and click **Edit**
+3. Set the **URL** to your external service endpoint
+4. Click **Save**
+
+---
+
+## Verifying the Installation
+
+### Check site permissions
+
+If callbacks return permission errors, verify the guest user has the correct object access:
+
+1. **Setup → Sites → ObjProof → Public Access Settings**
+2. Under **Object Settings → Tasks**, confirm Read and Edit are enabled
+3. Confirm `objectionproof.TaskCallbackService` appears under **Enabled Apex Class Access**
+
+If these are missing, run the following in **Developer Console → Execute Anonymous**:
+
+```apex
+List<User> guestUsers = [SELECT Id FROM User WHERE Profile.Name = 'ObjProof Profile' AND IsActive = true LIMIT 1];
+Id psId = [SELECT Id FROM PermissionSet WHERE Name = 'objproof_site_permission_set' LIMIT 1].Id;
+insert new PermissionSetAssignment(AssigneeId = guestUsers[0].Id, PermissionSetId = psId);
+System.debug('Assigned permission set to guest user: ' + guestUsers[0].Id);
+```
+
+### End-to-end test
+
+1. Create or update a Task and set the **Recording URL** field
+2. The **Callback Token** field should auto-populate within seconds
+3. Query the token:
+
+```apex
+Task t = [SELECT op_callback_token__c FROM Task WHERE op_recording_url__c != null ORDER BY LastModifiedDate DESC LIMIT 1];
+System.debug('Token: ' + t.op_callback_token__c);
+```
+
+4. Make a test callback using the token:
+
+```bash
+curl -X PATCH \
+  "https://[your-org-domain].my.site.com/objproof/services/apexrest/objectionproof/v1/task-callback/{token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "salescall_id": 9999,
+    "status": "processed",
+    "transcript": "Test transcript",
+    "evaluation": "https://example.com/eval/9999",
+    "score": 75,
+    "opening": 8, "engagement": 7, "nonneedy": 8, "guiding": 7,
+    "closing": 6, "assertiveness": 7, "empathy": 8,
+    "stories": 5, "objection": 6, "remorse": 8
+  }'
+```
+
+Expected response: `HTTP 204 No Content`
+
+5. Confirm the Task now has score fields populated and **Callback Token** is blank
+
+---
 
 ## Application Configuration
 
-This package uses Custom Metadata Types for configuration. To change settings, such as enabling the custom logger, you must create or edit records for the "Application Setting" Custom Metadata Type.
+This package uses Custom Metadata for configuration. Settings are managed under **Setup → Custom Metadata Types → Objection Proof Setting**.
 
-### How to Enable Logging
+### Enable Logging
 
-Logging is **disabled by default**. To enable it:
+Logging is **disabled by default**. To enable:
 
-1.  Go to **Setup** -> **Custom Metadata Types**.
-2.  Click **Manage Records** next to **Objection Proof Setting**.
-3.  Click **New**.
-4.  Set the following values:
-    * **Label:** `Logging Enabled`
-    * **Application Setting Name:** `Logging_Enabled`
-    * **Value:** `true`
-    * **Description:** `Set to 'true' to enable the custom logging service.`
-5.  Click **Save**.
+1. Go to **Setup → Custom Metadata Types**
+2. Click **Manage Records** next to **Objection Proof Setting**
+3. Click **New** and set:
+   - **Label**: `Logging Enabled`
+   - **Application Setting Name**: `Logging_Enabled`
+   - **Value**: `true`
+4. Click **Save**
 
-To disable logging, you can either delete this record or change its **Value** to `false`.
+To disable, set the **Value** to `false` or delete the record.
+
+Logs are written to the `objectionproof__Log__c` custom object and can be viewed under the **Log** tab (if added to your app) or via SOQL:
+
+```soql
+SELECT objectionproof__Level__c, objectionproof__Context__c, objectionproof__Message__c, CreatedDate
+FROM objectionproof__Log__c
+ORDER BY CreatedDate DESC
+LIMIT 50
+```
+
+---
+
+## Permission Sets
+
+| Permission Set | Assign To | Purpose |
+|---|---|---|
+| `objproof_permission_set` | Regular users | Field access to `op_*` fields on Task/Event, Apex class access |
+| `objproof_automation_permission_set` | **Automated Process User** | Named credential access for outbound HTTP callouts |
+| `objproof_site_permission_set` | Site guest user *(auto-assigned on install)* | Task read/edit + `TaskCallbackService` access for inbound callbacks |

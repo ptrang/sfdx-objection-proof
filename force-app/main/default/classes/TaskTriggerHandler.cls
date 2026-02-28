@@ -7,7 +7,7 @@ public with sharing class TaskTriggerHandler {
             if (newTask.op_recording_url__c != null && oldTask.op_recording_url__c == null) {
                 LoggerService.log('INFO', 'Token generation condition MET for Task Id: ' + newTask.Id, 'TaskTriggerHandler.onBeforeUpdate');
                 String token = EncodingUtil.base64Encode(Crypto.generateAesKey(128));
-                newTask.op_callback_token__c = token.replace('+', '-').replace('/', '_');
+                newTask.op_callback_token__c = token.replace('+', '-').replace('/', '_').replace('=', '');
             }
         }
     }
@@ -29,9 +29,14 @@ public with sharing class TaskTriggerHandler {
     }
 
     private static String getCallbackBaseUrl() {
-        List<Site> sites = [SELECT SecureURL FROM Site WHERE UrlPathPrefix = 'objproof' AND Status = 'Active' LIMIT 1];
+        List<Site> sites = [SELECT Id FROM Site WHERE UrlPathPrefix = 'objproof' AND Status = 'Active' LIMIT 1];
         if (!sites.isEmpty()) {
-            return sites[0].SecureURL;
+            // Org domain:  https://org.my.salesforce.com
+            // Site URL:    https://org.my.site.com/objproof
+            // Same pattern works for sandboxes: https://org--sb.sandbox.my.salesforce.com
+            //                               ->  https://org--sb.sandbox.my.site.com/objproof
+            String orgUrl = URL.getOrgDomainUrl().toExternalForm();
+            return orgUrl.replace('.salesforce.com', '.site.com') + '/objproof';
         }
         return URL.getOrgDomainUrl().toExternalForm();
     }

@@ -1,14 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Site xmlns="http://soap.sforce.com/2006/04/metadata">
+<CustomSite xmlns="http://soap.sforce.com/2006/04/metadata">
     <active>false</active>
+    <allowGuestPaymentsApi>false</allowGuestPaymentsApi>
     <allowHomePage>false</allowHomePage>
     <allowStandardAnswersPages>false</allowStandardAnswersPages>
-    <allowStandardHomePage>false</allowStandardHomePage>
+    <allowStandardIdeasPages>false</allowStandardIdeasPages>
     <allowStandardLookups>false</allowStandardLookups>
     <allowStandardPortalPages>false</allowStandardPortalPages>
     <allowStandardSearch>false</allowStandardSearch>
+    <authorizationRequiredPage>Unauthorized</authorizationRequiredPage>
+    <bandwidthExceededPage>BandwidthExceeded</bandwidthExceededPage>
+    <browserXssProtection>true</browserXssProtection>
+    <cachePublicVisualforcePagesInProxyServers>false</cachePublicVisualforcePagesInProxyServers>
     <clickjackProtectionLevel>AllowAllFraming</clickjackProtectionLevel>
-    <enableFeeds>false</enableFeeds>
-    <label>ObjProof</label>
+    <contentSniffingProtection>true</contentSniffingProtection>
+    <enableAuraRequests>false</enableAuraRequests>
+    <fileNotFoundPage>FileNotFound</fileNotFoundPage>
+    <genericErrorPage>Exception</genericErrorPage>
+    <inMaintenancePage>InMaintenance</inMaintenancePage>
+    <inactiveIndexPage>InMaintenance</inactiveIndexPage>
+    <indexPage>ObjProofIndex</indexPage>
+    <masterLabel>ObjProof</masterLabel>
+    <referrerPolicyOriginWhenCrossOrigin>true</referrerPolicyOriginWhenCrossOrigin>
+    <siteTemplate>SiteTemplate</siteTemplate>
+    <siteType>Visualforce</siteType>
     <urlPathPrefix>objproof</urlPathPrefix>
-</Site>
+</CustomSite>

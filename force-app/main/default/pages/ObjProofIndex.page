@@ -1,0 +1,4 @@
+<apex:page>
+    <h1>Objection Proof</h1>
+    <p>This site is used for API callbacks only.</p>
+</apex:page>
