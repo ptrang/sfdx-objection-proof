@@ -3,12 +3,12 @@
     {
       "versionName": "ver 1.11",
       "versionNumber": "1.11.0.NEXT",
-      "ancestorVersion": "HIGHEST",
       "path": "force-app",
       "default": true,
       "package": "Objection Proof",
       "versionDescription": "Coaching and analysis on your sales calls to improve process",
-      "postInstallClass": "PostInstallScript"
+      "postInstallClass": "PostInstallScript",
+      "ancestorVersion": "HIGHEST"
     }
   ],
   "name": "sfdx-objection-proof",
@@ -39,6 +39,7 @@
     "Objection Proof@1.7.0-1": "04tgL0000005qxFQAQ",
     "Objection Proof@1.8.0-1": "04tgL0000005rYLQAY",
     "Objection Proof@1.9.0-1": "04tgL0000005rbZQAQ",
-    "Objection Proof@1.10.0-1": "04tgL0000008SvBQAU"
+    "Objection Proof@1.10.0-1": "04tgL0000008SvBQAU",
+    "Objection Proof@1.11.0-1": "04tgL000000C1zdQAC"
   }
 }

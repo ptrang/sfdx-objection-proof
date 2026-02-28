@@ -27,14 +27,22 @@ global without sharing class TaskCallbackService {
         RestResponse response = RestContext.response;
 
         // Extract the token from the URL. e.g., .../v1/task-callback/A_B_C_TOKEN
-        String token = request.requestURI.substring(request.requestURI.lastIndexOf('/') + 1);
+        String token = request.requestURI.substring(request.requestURI.lastIndexOf('/') + 1).trim();
+
+        // Reject missing or obviously invalid tokens before touching the database.
+        if (String.isBlank(token) || token.length() > 256) {
+            response.statusCode = 400;
+            response.responseBody = Blob.valueOf('{"error":"Invalid token format."}');
+            return;
+        }
 
         // Find the task using the unique, case-sensitive token.
         List<Task> tasks = [SELECT Id, op_salescall_id__c, op_transcript__c, op_evaluation__c, op_call_score__c FROM Task WHERE op_callback_token__c = :token LIMIT 1];
 
         if (tasks.isEmpty()) {
             response.statusCode = 404; // Not Found
-            response.responseBody = Blob.valueOf('{"error":"Invalid or expired token "' + token + '"."}');
+            // Do not echo the token back — avoids reflecting user-supplied input.
+            response.responseBody = Blob.valueOf('{"error":"Invalid or expired token."}');
             return;
         }
 
@@ -70,13 +78,17 @@ global without sharing class TaskCallbackService {
             // CRITICAL: Invalidate the token to make it single-use.
             taskToUpdate.op_callback_token__c = null;
 
-            update taskToUpdate;
+            // SYSTEM_MODE bypasses CRUD/FLS so the guest user can write Task
+            // despite not having edit object permission (guest users cannot be
+            // granted edit on Task, but without sharing + SYSTEM_MODE handles it).
+            Database.update(taskToUpdate, AccessLevel.SYSTEM_MODE);
 
             response.statusCode = 204; // No Content (Success with no body to return)
 
         } catch (Exception e) {
             response.statusCode = 400; // Bad Request
-            response.responseBody = Blob.valueOf('{"error":"Invalid request body.", "details":"' + e.getMessage() + '"}');
+            // Do not expose internal exception details to external callers.
+            response.responseBody = Blob.valueOf('{"error":"Invalid request body."}');
         }
     }
 }

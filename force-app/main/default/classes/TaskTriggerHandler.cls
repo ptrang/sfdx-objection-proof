@@ -31,12 +31,12 @@ public with sharing class TaskTriggerHandler {
     private static String getCallbackBaseUrl() {
         List<Site> sites = [SELECT Id FROM Site WHERE UrlPathPrefix = 'objproof' AND Status = 'Active' LIMIT 1];
         if (!sites.isEmpty()) {
-            // Org domain:  https://org.my.salesforce.com
-            // Site URL:    https://org.my.site.com/objproof
-            // Same pattern works for sandboxes: https://org--sb.sandbox.my.salesforce.com
-            //                               ->  https://org--sb.sandbox.my.site.com/objproof
-            String orgUrl = URL.getOrgDomainUrl().toExternalForm();
-            return orgUrl.replace('.salesforce.com', '.site.com') + '/objproof';
+            // SiteDetail.SecureURL is the authoritative public HTTPS URL for the site,
+            // works across Enhanced Domain orgs (.my.site.com) and classic orgs (.salesforce-sites.com).
+            List<SiteDetail> details = [SELECT SecureURL FROM SiteDetail WHERE DurableId = :sites[0].Id LIMIT 1];
+            if (!details.isEmpty() && String.isNotBlank(details[0].SecureURL)) {
+                return details[0].SecureURL;
+            }
         }
         return URL.getOrgDomainUrl().toExternalForm();
     }

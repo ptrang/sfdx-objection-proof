@@ -1,4 +1,6 @@
-global class PostInstallScript implements InstallHandler {
+// without sharing: install handlers run in a privileged context and must be able
+// to query and assign permission sets regardless of the installer's sharing access.
+global without sharing class PostInstallScript implements InstallHandler {
 
     global void onInstall(InstallContext ctx) {
         try {

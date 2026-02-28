@@ -1,4 +1,4 @@
-public class LogQueueable implements Queueable {
+public with sharing class LogQueueable implements Queueable {
 
     private final String logsAsJson;
 

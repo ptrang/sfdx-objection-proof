@@ -1,4 +1,6 @@
-public class TaskCalloutEventHandler {
+// without sharing: platform event subscribers run as the Automated Process User.
+// Sharing rules are not applicable in this system-level trigger context.
+public without sharing class TaskCalloutEventHandler {
 
     public static void handleEvents(List<TaskCalloutEvent__e> events) {
         Set<Id> taskIds = new Set<Id>();

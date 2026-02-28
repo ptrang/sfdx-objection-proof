@@ -81,6 +81,25 @@ private class TaskCallbackServiceTest {
         Test.stopTest();
 
         System.assertEquals(404, res.statusCode);
+        // Response must not echo back the user-supplied token (XSS prevention).
+        String body = res.responseBody.toString();
+        System.assert(!body.contains('FAKE-TOKEN-789'), 'Response body must not reflect the token back to the caller.');
+    }
+
+    @IsTest
+    static void testBlankToken() {
+        RestRequest req = new RestRequest();
+        RestResponse res = new RestResponse();
+        req.requestURI = '/services/apexrest/v1/task-callback/';
+        req.httpMethod = 'PATCH';
+        RestContext.request = req;
+        RestContext.response = res;
+
+        Test.startTest();
+        TaskCallbackService.updateTaskScore();
+        Test.stopTest();
+
+        System.assertEquals(400, res.statusCode, 'Blank token should return 400.');
     }
 
     @IsTest

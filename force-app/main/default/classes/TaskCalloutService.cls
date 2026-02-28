@@ -1,4 +1,7 @@
-public class TaskCalloutService implements Queueable, Database.AllowsCallouts {
+// without sharing: this Queueable runs as the Automated Process User (system context).
+// Sharing rules are not applicable; the class only reads Tasks that were explicitly
+// queued by the trigger, identified by their Id set.
+public without sharing class TaskCalloutService implements Queueable, Database.AllowsCallouts {
 
     private final Set<Id> taskIds;
     private final String secureSiteUrl;
@@ -23,11 +26,14 @@ public class TaskCalloutService implements Queueable, Database.AllowsCallouts {
             objectionproof__Triggering_User__c = triggeringUserId // Add user to log
         ));
 
+        // WITH SYSTEM_MODE: this Queueable runs as the Automated Process User.
+        // FLS enforcement is not applicable in this system-level context.
         List<Task> tasksToSend = [
             SELECT Id, Subject, objectionproof__op_recording_url__c, objectionproof__op_callback_token__c,
                    objectionproof__op_call_to__c, objectionproof__op_call_from__c,
                    WhoId, Who.Name, OwnerId, Owner.Name
             FROM Task WHERE Id IN :taskIds
+            WITH SYSTEM_MODE
         ];
 
         // This check is still valuable for detecting tasks deleted by other means
