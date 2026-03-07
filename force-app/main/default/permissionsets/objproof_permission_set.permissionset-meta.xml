@@ -249,4 +249,38 @@
     </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>Objection Proof Permission Set</label>
+    <objectPermissions>
+        <allowCreate>false</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>op_Call_Analysis__c</object>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>op_Call_Analysis__c.op_Task__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>op_Call_Analysis__c.op_salescall_id__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>op_Call_Analysis__c.op_evaluation_url__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>op_Call_Analysis__c.op_full_transcript__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>op_Call_Analysis__c.op_full_evaluation__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
 </PermissionSet>

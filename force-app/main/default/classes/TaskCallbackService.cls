@@ -7,6 +7,9 @@ global without sharing class TaskCallbackService {
         public String status { get; set; }
         public String transcript { get; set; }
         public String evaluation { get; set; }
+        public String evaluation_url { get; set; }
+        public String full_transcript { get; set; }
+        public String full_evaluation { get; set; }
         public Decimal revenue { get; set; }
         public Decimal opening { get; set; }
         public Decimal engagement { get; set; }
@@ -37,7 +40,7 @@ global without sharing class TaskCallbackService {
         }
 
         // Find the task using the unique, case-sensitive token.
-        List<Task> tasks = [SELECT Id, op_salescall_id__c, op_transcript__c, op_evaluation__c, op_call_score__c FROM Task WHERE op_callback_token__c = :token LIMIT 1];
+        List<Task> tasks = [SELECT Id, op_salescall_id__c, op_call_score__c FROM Task WHERE op_callback_token__c = :token LIMIT 1];
 
         if (tasks.isEmpty()) {
             response.statusCode = 404; // Not Found
@@ -62,8 +65,6 @@ global without sharing class TaskCallbackService {
             );
 
             taskToUpdate.op_salescall_id__c = payload.salescall_id;
-            taskToUpdate.op_transcript__c = payload.transcript;
-            taskToUpdate.op_evaluation__c = payload.evaluation;
             taskToUpdate.op_call_score_opening__c = payload.opening;
             taskToUpdate.op_call_score_engagement__c = payload.engagement;
             taskToUpdate.op_call_score_nonneedy__c = payload.nonneedy;
@@ -82,6 +83,16 @@ global without sharing class TaskCallbackService {
             // despite not having edit object permission (guest users cannot be
             // granted edit on Task, but without sharing + SYSTEM_MODE handles it).
             Database.update(taskToUpdate, AccessLevel.SYSTEM_MODE);
+
+            // Create the child Call Analysis record with transcript and evaluation.
+            op_Call_Analysis__c analysis = new op_Call_Analysis__c(
+                op_Task__c = taskToUpdate.Id,
+                op_salescall_id__c = payload.salescall_id,
+                op_evaluation_url__c = payload.evaluation_url,
+                op_full_transcript__c = payload.full_transcript,
+                op_full_evaluation__c = payload.full_evaluation
+            );
+            Database.insert(analysis, AccessLevel.SYSTEM_MODE);
 
             response.statusCode = 204; // No Content (Success with no body to return)
 

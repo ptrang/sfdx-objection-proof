@@ -32,6 +32,9 @@ private class TaskCallbackServiceTest {
             '"salescall_id": "ext-id-123",' +
             '"transcript": "This is the call transcript...",' +
             '"evaluation": "This was a good call...",' +
+            '"evaluation_url": "https://example.com/eval/123",' +
+            '"full_transcript": "Speaker 1: Hello\\nSpeaker 2: Hi there...",' +
+            '"full_evaluation": "Overall the call demonstrated strong skills...",' +
             '"opening": 9.1,' +
             '"engagement": 8.2,' +
             '"nonneedy": 7.3,' +
@@ -55,16 +58,25 @@ private class TaskCallbackServiceTest {
 
         System.assertEquals(204, res.statusCode, 'Status code should be 204 for a successful update.');
 
-        // --- UPDATED: Verify all new fields are updated correctly ---
         Task updatedTask = [
-            SELECT objectionproof__op_salescall_id__c, objectionproof__op_transcript__c, objectionproof__op_evaluation__c,
-                   objectionproof__op_call_revenue__c, objectionproof__op_call_score_opening__c, objectionproof__op_call_score__c
+            SELECT objectionproof__op_salescall_id__c, objectionproof__op_call_score_opening__c, objectionproof__op_call_score__c
             FROM Task WHERE objectionproof__op_callback_token__c = NULL AND Subject = 'Test for callback' LIMIT 1
         ];
-        
+
         System.assertEquals('ext-id-123', updatedTask.objectionproof__op_salescall_id__c);
         System.assertEquals(9.1, updatedTask.objectionproof__op_call_score_opening__c);
         System.assertEquals(95.5, updatedTask.objectionproof__op_call_score__c);
+
+        // Verify the Call Analysis child record was created
+        List<op_Call_Analysis__c> analyses = [
+            SELECT op_Task__c, op_salescall_id__c, op_evaluation_url__c, op_full_transcript__c, op_full_evaluation__c
+            FROM op_Call_Analysis__c WHERE op_Task__c = :updatedTask.Id
+        ];
+        System.assertEquals(1, analyses.size(), 'One Call Analysis record should be created.');
+        System.assertEquals('ext-id-123', analyses[0].op_salescall_id__c);
+        System.assertEquals('https://example.com/eval/123', analyses[0].op_evaluation_url__c);
+        System.assert(analyses[0].op_full_transcript__c.contains('Speaker 1'), 'Full transcript should be populated.');
+        System.assert(analyses[0].op_full_evaluation__c.contains('strong skills'), 'Full evaluation should be populated.');
     }
 
     @IsTest
