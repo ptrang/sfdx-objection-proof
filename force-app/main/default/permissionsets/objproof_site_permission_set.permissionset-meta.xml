@@ -4,6 +4,10 @@
     <label>Objection Proof Site Permission Set</label>
     <hasActivationRequired>false</hasActivationRequired>
     <classAccesses>
+        <apexClass>CallActivityService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>TaskCallbackService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -93,22 +97,12 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
-        <field>Task.op_evaluation__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
         <field>Task.op_recording_url__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
         <field>Task.op_salescall_id__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>Task.op_transcript__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <objectPermissions>

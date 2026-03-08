@@ -5,8 +5,6 @@ global without sharing class TaskCallbackService {
     private class ScorePayload {
         public String salescall_id { get; set; }
         public String status { get; set; }
-        public String transcript { get; set; }
-        public String evaluation { get; set; }
         public String evaluation_url { get; set; }
         public String full_transcript { get; set; }
         public String full_evaluation { get; set; }
