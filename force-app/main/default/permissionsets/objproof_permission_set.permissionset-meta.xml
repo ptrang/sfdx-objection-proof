@@ -358,11 +358,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>Lead.op_ai_call_type__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
         <field>Opportunity.op_ai_call_status__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -379,11 +374,6 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Opportunity.op_ai_call_appointment__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Opportunity.op_ai_call_type__c</field>
         <readable>true</readable>
     </fieldPermissions>
 </PermissionSet>

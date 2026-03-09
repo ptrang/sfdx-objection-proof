@@ -59,7 +59,7 @@ private class QueueCallServiceTest {
         Test.setMock(HttpCalloutMock.class, new MockQueueCallSuccess());
 
         List<QueueCallService.QueueCallRequest> requests = new List<QueueCallService.QueueCallRequest>{
-            new QueueCallService.QueueCallRequest(l.Id, 'Lead', 'never_reached_fu')
+            new QueueCallService.QueueCallRequest(l.Id, 'Lead')
         };
 
         Test.startTest();
@@ -95,7 +95,7 @@ private class QueueCallServiceTest {
         Test.setMock(HttpCalloutMock.class, new MockQueueCallSuccess());
 
         List<QueueCallService.QueueCallRequest> requests = new List<QueueCallService.QueueCallRequest>{
-            new QueueCallService.QueueCallRequest(o.Id, 'Opportunity', 'old_lead_fu')
+            new QueueCallService.QueueCallRequest(o.Id, 'Opportunity')
         };
 
         Test.startTest();
@@ -116,7 +116,7 @@ private class QueueCallServiceTest {
         Test.setMock(HttpCalloutMock.class, new MockQueueCallConflict());
 
         List<QueueCallService.QueueCallRequest> requests = new List<QueueCallService.QueueCallRequest>{
-            new QueueCallService.QueueCallRequest(l.Id, 'Lead', 'old_lead_fu')
+            new QueueCallService.QueueCallRequest(l.Id, 'Lead')
         };
 
         Test.startTest();
@@ -137,7 +137,7 @@ private class QueueCallServiceTest {
         Test.setMock(HttpCalloutMock.class, new MockQueueCallError());
 
         List<QueueCallService.QueueCallRequest> requests = new List<QueueCallService.QueueCallRequest>{
-            new QueueCallService.QueueCallRequest(l.Id, 'Lead', 'old_lead_fu')
+            new QueueCallService.QueueCallRequest(l.Id, 'Lead')
         };
 
         Test.startTest();
@@ -156,7 +156,7 @@ private class QueueCallServiceTest {
         insert l;
 
         List<QueueCallService.QueueCallRequest> requests = new List<QueueCallService.QueueCallRequest>{
-            new QueueCallService.QueueCallRequest(l.Id, 'Lead', 'old_lead_fu')
+            new QueueCallService.QueueCallRequest(l.Id, 'Lead')
         };
 
         Test.startTest();
@@ -178,7 +178,7 @@ private class QueueCallServiceTest {
         Test.setMock(HttpCalloutMock.class, new MockQueueCallSuccess());
 
         List<QueueCallService.QueueCallRequest> requests = new List<QueueCallService.QueueCallRequest>{
-            new QueueCallService.QueueCallRequest(l.Id, 'Lead', 'old_lead_fu')
+            new QueueCallService.QueueCallRequest(l.Id, 'Lead')
         };
 
         Test.startTest();
@@ -200,7 +200,6 @@ private class QueueCallServiceTest {
 
         Test.startTest();
         l.op_ai_call_status__c = 'call';
-        l.op_ai_call_type__c = 'never_reached_fu';
         update l;
         Test.getEventBus().deliver();
         Test.stopTest();

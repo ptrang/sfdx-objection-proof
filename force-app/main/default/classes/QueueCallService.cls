@@ -4,12 +4,10 @@ public without sharing class QueueCallService implements Queueable, Database.All
     public class QueueCallRequest {
         public Id recordId;
         public String objectType;
-        public String callType;
 
-        public QueueCallRequest(Id recordId, String objectType, String callType) {
+        public QueueCallRequest(Id recordId, String objectType) {
             this.recordId = recordId;
             this.objectType = objectType;
-            this.callType = callType;
         }
     }
 
@@ -40,14 +38,38 @@ public without sharing class QueueCallService implements Queueable, Database.All
         // Separate Lead and Opportunity requests
         Set<Id> leadIds = new Set<Id>();
         Set<Id> oppIds = new Set<Id>();
-        Map<Id, String> callTypeByRecordId = new Map<Id, String>();
 
         for (QueueCallRequest req : requests) {
-            callTypeByRecordId.put(req.recordId, req.callType);
             if (req.objectType == 'Lead') {
                 leadIds.add(req.recordId);
             } else if (req.objectType == 'Opportunity') {
                 oppIds.add(req.recordId);
+            }
+        }
+
+        // Determine call_type per record based on existing call activity.
+        // "old_lead_fu" if any Call tasks exist, otherwise "never_reached_fu".
+        Map<Id, String> callTypeByRecordId = new Map<Id, String>();
+        Set<Id> allIds = new Set<Id>();
+        allIds.addAll(leadIds);
+        allIds.addAll(oppIds);
+        // Default all to never_reached_fu
+        for (Id rid : allIds) {
+            callTypeByRecordId.put(rid, 'never_reached_fu');
+        }
+        // Find records that have existing call Tasks (WhoId for Leads, WhatId for Opportunities)
+        for (Task t : [
+            SELECT WhoId, WhatId FROM Task
+            WHERE (WhoId IN :leadIds OR WhatId IN :oppIds)
+            AND TaskSubtype = 'Call'
+            WITH SYSTEM_MODE
+            LIMIT 2000
+        ]) {
+            if (t.WhoId != null && leadIds.contains(t.WhoId)) {
+                callTypeByRecordId.put(t.WhoId, 'old_lead_fu');
+            }
+            if (t.WhatId != null && oppIds.contains(t.WhatId)) {
+                callTypeByRecordId.put(t.WhatId, 'old_lead_fu');
             }
         }
 

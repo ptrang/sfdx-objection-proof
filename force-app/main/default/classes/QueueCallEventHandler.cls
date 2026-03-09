@@ -8,8 +8,7 @@ public without sharing class QueueCallEventHandler {
         for (QueueCallEvent__e event : events) {
             requests.add(new QueueCallService.QueueCallRequest(
                 (Id) event.RecordId__c,
-                event.ObjectType__c,
-                event.CallType__c
+                event.ObjectType__c
             ));
         }
 
