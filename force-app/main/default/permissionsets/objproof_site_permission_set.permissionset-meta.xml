@@ -139,4 +139,29 @@
         <field>op_Call_Analysis__c.op_full_evaluation__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>op_Call_Analysis__c.op_summary__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>op_Call_Analysis__c.op_outcome__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>op_Call_Analysis__c.op_appointment__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>op_Call_Analysis__c.op_prospect_phone__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>op_Call_Analysis__c.op_prospect_name__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
 </PermissionSet>
