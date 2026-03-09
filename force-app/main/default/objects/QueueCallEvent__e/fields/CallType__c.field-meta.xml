@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>CallType__c</fullName>
+    <label>Call Type</label>
+    <type>Text</type>
+    <length>100</length>
+    <isFilteringField>false</isFilteringField>
+    <isNameField>false</isNameField>
+    <isSortingField>false</isSortingField>
+</CustomField>
