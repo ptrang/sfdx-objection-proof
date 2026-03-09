@@ -68,6 +68,7 @@ global without sharing class CallActivityService {
 
             Id whoId;
             Id whatId;
+            String matchedType; // 'Lead', 'Contact', or 'Opportunity'
 
             // 1. Try prospect_notes as a Salesforce record ID
             if (String.isNotBlank(payload.prospect_notes)) {
@@ -75,12 +76,33 @@ global without sharing class CallActivityService {
                     Id recordId = Id.valueOf(payload.prospect_notes);
                     String sObjectType = recordId.getSObjectType().getDescribe().getName();
                     if (sObjectType == 'Lead') {
-                        whoId = recordId;
+                        // Check if the Lead has been converted
+                        List<Lead> leadCheck = [
+                            SELECT Id, IsConverted, ConvertedContactId, ConvertedOpportunityId
+                            FROM Lead WHERE Id = :recordId LIMIT 1
+                        ];
+                        if (!leadCheck.isEmpty() && leadCheck[0].IsConverted) {
+                            // Follow the conversion chain
+                            if (leadCheck[0].ConvertedContactId != null) {
+                                whoId = leadCheck[0].ConvertedContactId;
+                                matchedType = 'Contact';
+                            }
+                            if (leadCheck[0].ConvertedOpportunityId != null) {
+                                whatId = leadCheck[0].ConvertedOpportunityId;
+                            } else if (whoId != null) {
+                                whatId = findOpportunityForContact(whoId);
+                            }
+                        } else {
+                            whoId = recordId;
+                            matchedType = 'Lead';
+                        }
                     } else if (sObjectType == 'Contact') {
                         whoId = recordId;
+                        matchedType = 'Contact';
                         whatId = findOpportunityForContact(recordId);
                     } else if (sObjectType == 'Opportunity') {
                         whatId = recordId;
+                        matchedType = 'Opportunity';
                     }
                 } catch (Exception e) {
                     // Not a valid Salesforce ID — fall through to phone lookup.
@@ -91,24 +113,56 @@ global without sharing class CallActivityService {
             if (whoId == null && whatId == null && String.isNotBlank(payload.prospect_phone)) {
                 String phone = payload.prospect_phone.replaceAll('[^0-9]', '');
                 if (phone.length() >= 7) {
+                    // Search both unconverted Leads and Contacts.
+                    // Converted Leads are also searched to follow the conversion chain.
                     List<List<SObject>> results = [
                         FIND :phone IN PHONE FIELDS
-                        RETURNING Lead(Id WHERE IsConverted = false LIMIT 1),
+                        RETURNING Lead(Id, IsConverted, ConvertedContactId, ConvertedOpportunityId LIMIT 1),
                                    Contact(Id LIMIT 1)
                     ];
                     List<Lead> leads = (List<Lead>) results[0];
                     List<Contact> contacts = (List<Contact>) results[1];
 
                     if (!leads.isEmpty()) {
-                        whoId = leads[0].Id;
+                        Lead matchedLead = leads[0];
+                        if (matchedLead.IsConverted) {
+                            // Follow conversion chain to Contact/Opportunity
+                            if (matchedLead.ConvertedContactId != null) {
+                                whoId = matchedLead.ConvertedContactId;
+                                matchedType = 'Contact';
+                            }
+                            if (matchedLead.ConvertedOpportunityId != null) {
+                                whatId = matchedLead.ConvertedOpportunityId;
+                            } else if (whoId != null) {
+                                whatId = findOpportunityForContact(whoId);
+                            }
+                        } else {
+                            whoId = matchedLead.Id;
+                            matchedType = 'Lead';
+                        }
                     } else if (!contacts.isEmpty()) {
                         whoId = contacts[0].Id;
+                        matchedType = 'Contact';
                         whatId = findOpportunityForContact(contacts[0].Id);
                     }
                 }
             }
 
-            // 3. Create the Task (call activity)
+            // 3. If no match found, create a new Lead
+            if (whoId == null && whatId == null) {
+                Lead newLead = new Lead(
+                    LastName = String.isNotBlank(payload.prospect) ? payload.prospect : 'Unknown',
+                    Company = 'AI Call Lead',
+                    Phone = payload.prospect_phone,
+                    LeadSource = 'AI Call'
+                );
+                Database.insert(newLead, AccessLevel.SYSTEM_MODE);
+                whoId = newLead.Id;
+                matchedType = 'Lead';
+            }
+
+            // Create the Task (call activity) with full payload data
+            String callStatus = 'complete';
             Task t = new Task(
                 Subject = String.isNotBlank(payload.subject) ? payload.subject : 'AI Call from ' + payload.prospect,
                 Description = payload.summary,
@@ -123,14 +177,45 @@ global without sharing class CallActivityService {
 
             Database.insert(t, AccessLevel.SYSTEM_MODE);
 
-            // 4. Create Call Analysis child record
+            // Create Call Analysis child record with all payload data
             op_Call_Analysis__c analysis = new op_Call_Analysis__c(
                 op_Task__c = t.Id,
                 op_full_transcript__c = payload.transcript,
                 op_full_evaluation__c = payload.details,
-                op_evaluation_url__c = payload.call_url
+                op_evaluation_url__c = payload.call_url,
+                op_summary__c = payload.summary,
+                op_outcome__c = payload.outcome,
+                op_appointment__c = payload.appointment,
+                op_prospect_phone__c = payload.prospect_phone,
+                op_prospect_name__c = payload.prospect
             );
             Database.insert(analysis, AccessLevel.SYSTEM_MODE);
+
+            // Build the combined notes for Lead/Opportunity
+            String callNotes = buildCallNotes(payload);
+
+            // Update the matched or newly created Lead, or Opportunity, with AI call fields
+            if (matchedType == 'Lead' && whoId != null) {
+                Lead l = new Lead(
+                    Id = whoId,
+                    op_ai_call_status__c = callStatus,
+                    op_ai_call_notes__c = callNotes,
+                    op_ai_call_outcome__c = payload.outcome,
+                    op_ai_call_appointment__c = payload.appointment
+                );
+                Database.update(l, AccessLevel.SYSTEM_MODE);
+            }
+
+            if (whatId != null) {
+                Opportunity o = new Opportunity(
+                    Id = whatId,
+                    op_ai_call_status__c = callStatus,
+                    op_ai_call_notes__c = callNotes,
+                    op_ai_call_outcome__c = payload.outcome,
+                    op_ai_call_appointment__c = payload.appointment
+                );
+                Database.update(o, AccessLevel.SYSTEM_MODE);
+            }
 
             response.statusCode = 201;
             response.responseBody = Blob.valueOf('{"taskId":"' + t.Id + '"}');
@@ -139,6 +224,26 @@ global without sharing class CallActivityService {
             response.statusCode = 400;
             response.responseBody = Blob.valueOf('{"error":"Invalid request body."}');
         }
+    }
+
+    private static String buildCallNotes(CallPayload payload) {
+        List<String> parts = new List<String>();
+        if (String.isNotBlank(payload.prospect)) {
+            parts.add('Prospect: ' + payload.prospect);
+        }
+        if (String.isNotBlank(payload.outcome)) {
+            parts.add('Outcome: ' + payload.outcome);
+        }
+        if (String.isNotBlank(payload.appointment)) {
+            parts.add('Appointment: ' + payload.appointment);
+        }
+        if (String.isNotBlank(payload.summary)) {
+            parts.add('Summary: ' + payload.summary);
+        }
+        if (String.isNotBlank(payload.details)) {
+            parts.add('Details: ' + payload.details);
+        }
+        return String.join(parts, '\n');
     }
 
     private static Id findOpportunityForContact(Id contactId) {
