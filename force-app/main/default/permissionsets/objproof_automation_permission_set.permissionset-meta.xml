@@ -5,6 +5,10 @@
         <enabled>true</enabled>
         <externalCredentialPrincipal>objectionproof__objproof_extcred-Principal</externalCredentialPrincipal>
     </externalCredentialPrincipalAccesses>
+    <externalCredentialPrincipalAccesses>
+        <enabled>true</enabled>
+        <externalCredentialPrincipal>objectionproof__objproof_lead_extcred-Principal</externalCredentialPrincipal>
+    </externalCredentialPrincipalAccesses>
     <hasActivationRequired>false</hasActivationRequired>
     <label>Objection Proof Automation</label>
     <objectPermissions>
