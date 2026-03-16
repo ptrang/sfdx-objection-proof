@@ -4,7 +4,5 @@
     <label>Record Id</label>
     <type>Text</type>
     <length>18</length>
-    <isFilteringField>false</isFilteringField>
-    <isNameField>false</isNameField>
-    <isSortingField>false</isSortingField>
+
 </CustomField>

@@ -11,15 +11,6 @@
         <apexClass>TaskCallbackService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
-    <objectPermissions>
-        <allowCreate>false</allowCreate>
-        <allowDelete>false</allowDelete>
-        <allowEdit>false</allowEdit>
-        <allowRead>true</allowRead>
-        <modifyAllRecords>false</modifyAllRecords>
-        <object>Task</object>
-        <viewAllRecords>false</viewAllRecords>
-    </objectPermissions>
     <fieldPermissions>
         <editable>false</editable>
         <field>Task.op_call_from__c</field>
@@ -105,15 +96,6 @@
         <field>Task.op_salescall_id__c</field>
         <readable>true</readable>
     </fieldPermissions>
-    <objectPermissions>
-        <allowCreate>false</allowCreate>
-        <allowDelete>false</allowDelete>
-        <allowEdit>false</allowEdit>
-        <allowRead>true</allowRead>
-        <modifyAllRecords>false</modifyAllRecords>
-        <object>op_Call_Analysis__c</object>
-        <viewAllRecords>false</viewAllRecords>
-    </objectPermissions>
     <fieldPermissions>
         <editable>false</editable>
         <field>op_Call_Analysis__c.op_Task__c</field>
@@ -164,4 +146,22 @@
         <field>op_Call_Analysis__c.op_prospect_name__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <objectPermissions>
+        <allowCreate>false</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>Task</object>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>false</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>op_Call_Analysis__c</object>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
 </PermissionSet>

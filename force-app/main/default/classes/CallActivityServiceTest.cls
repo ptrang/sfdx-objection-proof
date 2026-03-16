@@ -48,7 +48,7 @@ private class CallActivityServiceTest {
         RestRequest req = new RestRequest();
         req.requestURI = '/services/apexrest/v1/call-activity';
         req.httpMethod = 'POST';
-        req.addHeader('Authorization', 'Bearer ' + TEST_SECRET);
+        req.headers.put('Authorization', 'Bearer ' + TEST_SECRET);
         if (body != null) {
             req.requestBody = Blob.valueOf(body);
         }
@@ -57,6 +57,9 @@ private class CallActivityServiceTest {
 
     @IsTest
     static void testMatchLeadByPhone() {
+        Lead existingLead = [SELECT Id FROM Lead WHERE Phone = '2345678901' LIMIT 1];
+        Test.setFixedSearchResults(new List<Id>{ existingLead.Id });
+
         RestRequest req = buildRequest('{' +
             '"prospect": "Patrick",' +
             '"summary": "Patrick called about selling his house.",' +
@@ -108,6 +111,9 @@ private class CallActivityServiceTest {
 
     @IsTest
     static void testMatchContactByPhone() {
+        Contact existingContact = [SELECT Id FROM Contact WHERE Phone = '9876543210' LIMIT 1];
+        Test.setFixedSearchResults(new List<Id>{ existingContact.Id });
+
         RestRequest req = buildRequest('{' +
             '"prospect": "Jane",' +
             '"summary": "Jane called about the opportunity.",' +
@@ -199,7 +205,7 @@ private class CallActivityServiceTest {
         RestRequest req = new RestRequest();
         req.requestURI = '/services/apexrest/v1/call-activity';
         req.httpMethod = 'POST';
-        req.addHeader('Authorization', 'Bearer wrong-secret');
+        req.headers.put('Authorization', 'Bearer wrong-secret');
         req.requestBody = Blob.valueOf('{"prospect_phone": "1234567890"}');
         RestResponse res = new RestResponse();
         RestContext.request = req;
@@ -217,7 +223,7 @@ private class CallActivityServiceTest {
         RestRequest req = new RestRequest();
         req.requestURI = '/services/apexrest/v1/call-activity';
         req.httpMethod = 'POST';
-        req.addHeader('Authorization', 'Bearer something');
+        req.headers.put('Authorization', 'Bearer something');
         req.requestBody = Blob.valueOf('{"prospect_phone": "1234567890"}');
         RestResponse res = new RestResponse();
         RestContext.request = req;

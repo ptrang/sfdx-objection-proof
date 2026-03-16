@@ -3,6 +3,9 @@
   "edition": "Developer",
   "features": ["EnableSetPasswordInApi"],
   "settings": {
+    "activitiesSettings": {
+      "enableActivityReminders": true
+    },
     "lightningExperienceSettings": {
       "enableS1DesktopEnabled": true
     },

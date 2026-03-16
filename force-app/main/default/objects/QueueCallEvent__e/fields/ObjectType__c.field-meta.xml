@@ -4,7 +4,5 @@
     <label>Object Type</label>
     <type>Text</type>
     <length>50</length>
-    <isFilteringField>false</isFilteringField>
-    <isNameField>false</isNameField>
-    <isSortingField>false</isSortingField>
+
 </CustomField>
