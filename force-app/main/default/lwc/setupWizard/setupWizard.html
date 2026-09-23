@@ -1,0 +1,268 @@
+<template>
+    <lightning-card icon-name="custom:custom108">
+        <h1 slot="title">Objection Proof Setup</h1>
+        <lightning-button-icon
+            slot="actions"
+            icon-name="utility:refresh"
+            alternative-text="Refresh status"
+            onclick={handleRefresh}
+        ></lightning-button-icon>
+
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+            <template if:true={loading}>
+                <div class="slds-align_absolute-center slds-p-around_large">
+                    <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+                </div>
+            </template>
+
+            <template if:true={hasError}>
+                <div class="slds-text-color_error slds-p-around_medium">
+                    Failed to load setup status. Please refresh.
+                </div>
+            </template>
+
+            <template if:true={hasStatus}>
+                <p class="slds-text-body_regular slds-m-bottom_medium slds-text-color_weak">
+                    Complete these steps to finish configuring Objection Proof.
+                </p>
+
+                <div class="slds-m-bottom_large">
+                    <lightning-progress-bar value={progressValue} size="large"></lightning-progress-bar>
+                    <p class="slds-text-body_small slds-m-top_xx-small slds-text-color_weak">
+                        {progressLabel}
+                    </p>
+                </div>
+
+                <!-- Step 1: Automation Permission Set -->
+                <div class="step-card slds-box slds-box_x-small slds-m-bottom_small">
+                    <div class="slds-grid slds-grid_vertical-center">
+                        <div class="slds-m-right_small">
+                            <lightning-icon
+                                icon-name={automationIconName}
+                                variant={automationIconVariant}
+                                size="x-small"
+                            ></lightning-icon>
+                        </div>
+                        <div class="slds-col slds-grow">
+                            <p class="step-title">1. Automation Permission Set</p>
+                            <p class="slds-text-body_small slds-text-color_weak">
+                                Assign the automation permission set to the Automated Process user for outbound callouts.
+                            </p>
+                        </div>
+                        <div class="slds-col slds-shrink-none slds-m-left_small">
+                            <template if:true={status.automationPermSetAssigned}>
+                                <span class="badge-complete">Complete</span>
+                            </template>
+                            <template if:false={status.automationPermSetAssigned}>
+                                <lightning-button
+                                    label="Assign Now"
+                                    variant="brand"
+                                    onclick={handleAssignAutomation}
+                                    disabled={assigningAutomation}
+                                ></lightning-button>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Site Activation -->
+                <div class="step-card slds-box slds-box_x-small slds-m-bottom_small">
+                    <div class="slds-grid slds-grid_vertical-center">
+                        <div class="slds-m-right_small">
+                            <lightning-icon
+                                icon-name={siteIconName}
+                                variant={siteIconVariant}
+                                size="x-small"
+                            ></lightning-icon>
+                        </div>
+                        <div class="slds-col slds-grow">
+                            <p class="step-title">2. Activate Callback Site</p>
+                            <p class="slds-text-body_small slds-text-color_weak">
+                                {siteDescription}
+                            </p>
+                        </div>
+                        <div class="slds-col slds-shrink-none slds-m-left_small">
+                            <template if:true={status.siteActive}>
+                                <span class="badge-complete">Active</span>
+                            </template>
+                            <template if:false={status.siteActive}>
+                                <lightning-button
+                                    label="Open Site Setup"
+                                    onclick={handleOpenSiteSetup}
+                                    icon-name="utility:new_window"
+                                ></lightning-button>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Objection Proof API Key -->
+                <div class="step-card slds-box slds-box_x-small slds-m-bottom_small">
+                    <div class="slds-grid slds-grid_vertical-center">
+                        <div class="slds-m-right_small">
+                            <lightning-icon
+                                icon-name={apiKeyIconName}
+                                variant={apiKeyIconVariant}
+                                size="x-small"
+                            ></lightning-icon>
+                        </div>
+                        <div class="slds-col slds-grow">
+                            <p class="step-title">3. Objection Proof API Key</p>
+                            <p class="slds-text-body_small slds-text-color_weak">
+                                Set your API key from the Objection Proof dashboard. Used for outbound calls, n8n webhook auth, and inbound result verification. The key is stored securely and cannot be viewed after saving.
+                            </p>
+                        </div>
+                        <div class="slds-col slds-shrink-none slds-m-left_small">
+                            <template if:true={status.apiKeyConfigured}>
+                                <span class="badge-complete slds-m-right_x-small">Configured</span>
+                                <template if:false={editingApiKey}>
+                                    <lightning-button
+                                        label="Replace"
+                                        onclick={handleEditApiKey}
+                                    ></lightning-button>
+                                </template>
+                            </template>
+                        </div>
+                    </div>
+
+                    <template if:true={showApiKeyInput}>
+                        <div class="slds-grid slds-grid_vertical-align-end slds-m-top_small">
+                            <div class="slds-col slds-grow">
+                                <lightning-input
+                                    type="password"
+                                    label="API Key"
+                                    value={apiKeyInput}
+                                    onchange={handleApiKeyChange}
+                                    max-length="255"
+                                    autocomplete="off"
+                                ></lightning-input>
+                            </div>
+                            <div class="slds-col slds-shrink-none slds-m-left_small">
+                                <template if:true={editingApiKey}>
+                                    <lightning-button
+                                        label="Cancel"
+                                        onclick={handleCancelApiKey}
+                                        class="slds-m-right_x-small"
+                                    ></lightning-button>
+                                </template>
+                                <lightning-button
+                                    label="Save"
+                                    variant="brand"
+                                    onclick={handleSaveApiKey}
+                                    disabled={saveApiKeyDisabled}
+                                ></lightning-button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Step 4: Lead Source Flow -->
+                <div class="step-card slds-box slds-box_x-small slds-m-bottom_small">
+                    <div class="slds-grid slds-grid_vertical-center">
+                        <div class="slds-m-right_small">
+                            <lightning-icon
+                                icon-name="utility:flow"
+                                size="x-small"
+                            ></lightning-icon>
+                        </div>
+                        <div class="slds-col slds-grow">
+                            <p class="step-title">4. Lead Source Flow</p>
+                            <p class="slds-text-body_small slds-text-color_weak">
+                                Clone the "Lead Call Source Check" template flow, update the Lead Source values to match your org, then activate your cloned version.
+                            </p>
+                        </div>
+                        <div class="slds-col slds-shrink-none slds-m-left_small">
+                            <lightning-button
+                                label="Open Flow Builder"
+                                onclick={handleOpenFlows}
+                                icon-name="utility:new_window"
+                            ></lightning-button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 5: Configure Webhook URL -->
+                <div class="step-card slds-box slds-box_x-small slds-m-bottom_small">
+                    <div class="slds-grid slds-grid_vertical-center">
+                        <div class="slds-m-right_small">
+                            <lightning-icon
+                                icon-name="utility:settings"
+                                size="x-small"
+                            ></lightning-icon>
+                        </div>
+                        <div class="slds-col slds-grow">
+                            <p class="step-title">5. Configure Webhook URL</p>
+                            <p class="slds-text-body_small slds-text-color_weak">
+                                Update the named credential with your n8n webhook URL.
+                            </p>
+                        </div>
+                        <div class="slds-col slds-shrink-none slds-m-left_small">
+                            <lightning-button
+                                label="Open Named Credentials"
+                                onclick={handleOpenNamedCredentials}
+                                icon-name="utility:new_window"
+                            ></lightning-button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 6: User Permissions -->
+                <div class="step-card slds-box slds-box_x-small slds-m-bottom_small">
+                    <div class="slds-grid slds-grid_vertical-center">
+                        <div class="slds-m-right_small">
+                            <lightning-icon
+                                icon-name={userIconName}
+                                variant={userIconVariant}
+                                size="x-small"
+                            ></lightning-icon>
+                        </div>
+                        <div class="slds-col slds-grow">
+                            <p class="step-title">6. User Permissions</p>
+                            <p class="slds-text-body_small slds-text-color_weak">
+                                Assign the Objection Proof permission set to users who need access to call scoring fields.
+                            </p>
+                            <p class="slds-text-body_small slds-m-top_xx-small">
+                                <strong>{userCountLabel}</strong>
+                            </p>
+                        </div>
+                        <div class="slds-col slds-shrink-none slds-m-left_small">
+                            <lightning-button
+                                label={userSelectionButtonLabel}
+                                onclick={handleToggleUserSelection}
+                                icon-name="utility:adduser"
+                            ></lightning-button>
+                        </div>
+                    </div>
+
+                    <template if:true={showUserSelection}>
+                        <div class="slds-m-top_small slds-p-top_small user-selection-panel">
+                            <template if:true={loadingUsers}>
+                                <div class="slds-align_absolute-center slds-p-around_medium">
+                                    <lightning-spinner alternative-text="Loading users" size="small"></lightning-spinner>
+                                </div>
+                            </template>
+                            <template if:false={loadingUsers}>
+                                <lightning-dual-listbox
+                                    label="Select Users"
+                                    source-label="Available Users"
+                                    selected-label="Selected Users"
+                                    options={availableUsers}
+                                    value={selectedUsers}
+                                    onchange={handleUserSelection}
+                                ></lightning-dual-listbox>
+                                <div class="slds-m-top_small slds-text-align_right">
+                                    <lightning-button
+                                        label="Assign Selected Users"
+                                        variant="brand"
+                                        onclick={handleAssignUsers}
+                                        disabled={assigningUsers}
+                                    ></lightning-button>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

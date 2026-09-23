@@ -4,13 +4,16 @@ global without sharing class PostInstallScript implements InstallHandler {
 
     global void onInstall(InstallContext ctx) {
         try {
-            // The Site is deployed inactive — admin must activate via Setup > Sites.
-            // The guest user (ObjProof Profile) is created by Salesforce on site deploy,
-            // so we can assign its permission set now even before activation.
             assignGuestUserPermissionSet();
         } catch (Exception e) {
             // Do not fail the installation. Admin can assign the permission set manually
             // via Setup > Sites > ObjProof > Public Access Settings if needed.
+        }
+        try {
+            assignInstallerPermissionSet(ctx.installerID(), 'objproof_permission_set');
+            assignInstallerPermissionSet(ctx.installerID(), 'objproof_admin_permission_set');
+        } catch (Exception e) {
+            // Do not fail the installation. Admin can assign the permission set manually.
         }
     }
 
@@ -38,6 +41,29 @@ global without sharing class PostInstallScript implements InstallHandler {
         if (existing.isEmpty()) {
             insert new PermissionSetAssignment(
                 AssigneeId = guestUsers[0].Id,
+                PermissionSetId = permSets[0].Id
+            );
+        }
+    }
+
+    private static void assignInstallerPermissionSet(Id installerId, String permSetName) {
+        if (installerId == null) return;
+
+        List<PermissionSet> permSets = [
+            SELECT Id FROM PermissionSet
+            WHERE Name = :permSetName
+            LIMIT 1
+        ];
+        if (permSets.isEmpty()) return;
+
+        List<PermissionSetAssignment> existing = [
+            SELECT Id FROM PermissionSetAssignment
+            WHERE AssigneeId = :installerId
+            AND PermissionSetId = :permSets[0].Id
+        ];
+        if (existing.isEmpty()) {
+            insert new PermissionSetAssignment(
+                AssigneeId = installerId,
                 PermissionSetId = permSets[0].Id
             );
         }

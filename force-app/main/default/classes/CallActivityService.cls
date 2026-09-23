@@ -22,11 +22,11 @@ global without sharing class CallActivityService {
         RestRequest request = RestContext.request;
         RestResponse response = RestContext.response;
 
-        // Validate Bearer token against the stored webhook secret.
-        String expectedToken = SettingsService.getString('Webhook_Secret', '');
+        // Validate Bearer token against the Objection Proof API key.
+        String expectedToken = SettingsService.getApiKey();
         if (String.isBlank(expectedToken)) {
             response.statusCode = 503;
-            response.responseBody = Blob.valueOf('{"error":"Webhook secret is not configured."}');
+            response.responseBody = Blob.valueOf('{"error":"API key is not configured."}');
             return;
         }
 
@@ -162,7 +162,7 @@ global without sharing class CallActivityService {
             }
 
             // Create the Task (call activity) with full payload data
-            String callStatus = 'complete';
+            String callStatus = AiCallStatus.COMPLETE;
             Task t = new Task(
                 Subject = String.isNotBlank(payload.subject) ? payload.subject : 'AI Call from ' + payload.prospect,
                 Description = payload.summary,

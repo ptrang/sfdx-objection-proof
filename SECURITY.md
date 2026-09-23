@@ -29,7 +29,12 @@ No passwords, credentials, or session tokens from within Salesforce are included
 
 ### How outbound authentication works
 
-Outbound requests use a **Custom External Credential** (`objproof_extcred`) with `NamedPrincipal` scope. The external credential sends custom HTTP headers (`ObjectionProof-Token`, `Salesforce-Username`) set by the admin post-installation. No credential values are hardcoded in the package source or metadata — the package deploys placeholder values (`CONFIGURE_POST_INSTALL`) that admins replace via Setup.
+Outbound requests go through named credentials (`objproof_namedcred`, `objproof_lead_namedcred`), so endpoint URLs are admin-configured and never hardcoded in Apex. Each request carries:
+
+- `ObjectionProof-Token` header (n8n) or `api_key` body field (Objection Proof platform): the subscriber's Objection Proof API key, read from the **protected hierarchy custom setting** `Secure_Setting__c.Api_Key__c`
+- `Salesforce-Org-Id` header: `UserInfo.getOrganizationId()`, which identifies the source org
+
+The API key is entered by an admin on the Objection Proof setup tab (`SetupWizardController.saveApiKey`). The field is write-only from the UI: the key is never returned to the browser. Because the custom setting is `Protected`, subscriber admins cannot read it through Setup, SOQL, or the API; only package Apex can. No key is shipped in package metadata.
 
 ---
 
@@ -111,7 +116,8 @@ The package contains **no dynamic SOQL**. All queries use static SOQL with bind 
 ## Credential Management
 
 - **No credentials, tokens, API keys, or PII are hardcoded** in package source code or deployed metadata
-- External credential header values (`ObjectionProof-Token`, `Salesforce-Username`) are set to `CONFIGURE_POST_INSTALL` in the package metadata and must be configured by the admin via Setup after installation
+- The Objection Proof API key is stored in the protected custom setting `Secure_Setting__c` (not Custom Metadata). It is set post-installation from the setup tab, is never returned to the client, and is readable only by package code
+- The same key authenticates inbound `CallActivityService` requests (`Authorization: Bearer <key>`), compared as SHA-256 digests
 - The named credential endpoint URL is set to a placeholder and must be configured post-installation
 - All outbound callouts use `callout:objectionproof__objproof_namedcred` (named credential reference) — no hardcoded URLs in Apex
 

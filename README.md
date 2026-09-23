@@ -83,21 +83,12 @@ Outbound HTTP callouts run as the **Automated Process** user (via platform event
 3. Set the **URL** to your external AI service webhook endpoint
 4. Click **Save**
 
-### 5. Configure the External Credential (auth headers)
+### 5. Set the Objection Proof API key
 
-The named credential uses a custom external credential to send authentication headers with every outbound request. After deployment these headers contain placeholder values and must be updated.
+1. Open the **Objection Proof** app and go to the **Objection Proof** setup tab (requires the **Objection Proof Admin** permission set, which the installer gets automatically)
+2. In step 3, paste your API key from the Objection Proof dashboard and click **Save**
 
-1. Go to **Setup → Security → Named Credentials → External Credentials** tab
-2. Find **objection proof ai external credentials** and click **Edit**
-3. Under **Principals**, click the **Principal** and then **Edit**
-4. Update the following header values:
-
-| Header name | Value |
-|---|---|
-| `ObjectionProof-Token` | Your API token for the external AI service |
-| `Salesforce-Username` | The org username (used to identify the source org) |
-
-5. Click **Save**
+The key is stored in a protected custom setting and can't be viewed after saving; use **Replace** to change it. Every outbound request sends it (`ObjectionProof-Token` header to n8n, `api_key` in the platform request body), along with a `Salesforce-Org-Id` header. The same key also authenticates inbound `call-activity` requests (`Authorization: Bearer <key>`).
 
 ---
 
@@ -142,6 +133,7 @@ curl -X PATCH \
     "transcript": "Test transcript",
     "evaluation": "https://example.com/eval/9999",
     "score": 75,
+    "revenue": 1250,
     "opening": 8, "engagement": 7, "nonneedy": 8, "guiding": 7,
     "closing": 6, "assertiveness": 7, "empathy": 8,
     "stories": 5, "objection": 6, "remorse": 8
@@ -160,6 +152,13 @@ Expected responses:
 ## Application Configuration
 
 This package uses Custom Metadata for runtime configuration. Settings are managed under **Setup → Custom Metadata Types → Objection Proof Setting**.
+
+| Setting | Default | Purpose |
+|---|---|---|
+| `Callout_Source` | `sf-bolder360` | Value sent as `source` in call scoring requests to n8n |
+| `Logging_Enabled` | *(not set)* | Set to `true` to write `Log__c` records (see below) |
+
+The API key is **not** stored here; see step 5 of Installation.
 
 ### Enable Logging
 
@@ -188,6 +187,7 @@ LIMIT 50
 
 | Permission Set | Assign To | Purpose |
 |---|---|---|
+| `objproof_admin_permission_set` | Objection Proof admins *(auto-assigned to installer)* | Setup tab (API key, permission set assignment) and read access to logs |
 | `objproof_permission_set` | Regular users | Read/write access to `op_*` fields on Task and Event; Apex class access |
 | `objproof_automation_permission_set` | **Automated Process User** | Named credential principal access for outbound callouts |
 | `objproof_site_permission_set` | Site guest user *(auto-assigned on install)* | Task read access + `TaskCallbackService` class access for inbound callbacks |

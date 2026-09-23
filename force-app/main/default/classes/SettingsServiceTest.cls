@@ -56,4 +56,19 @@ private class SettingsServiceTest {
         System.assertEquals('default-value', result, 'The default string value should be returned.');
         System.assertEquals(false, boolResult, 'The default boolean value should be false.');
     }
+
+    @isTest
+    static void testApiKeyNotConfigured() {
+        System.assertEquals(false, SettingsService.isApiKeyConfigured());
+    }
+
+    @isTest
+    static void testSetAndGetApiKey() {
+        SettingsService.setApiKey('first-key');
+        SettingsService.setApiKey('second-key');
+
+        System.assertEquals('second-key', SettingsService.getApiKey());
+        System.assertEquals(true, SettingsService.isApiKeyConfigured());
+        System.assertEquals(1, [SELECT COUNT() FROM Secure_Setting__c], 'Should upsert a single org default record');
+    }
 }

@@ -41,10 +41,7 @@ private class CallActivityServiceTest {
     }
 
     private static RestRequest buildRequest(String body) {
-        SettingsService.settingsMap.put('Webhook_Secret', new objectionproof__Application_Setting__mdt(
-            DeveloperName = 'Webhook_Secret',
-            objectionproof__Value__c = TEST_SECRET
-        ));
+        SettingsService.setApiKey(TEST_SECRET);
         RestRequest req = new RestRequest();
         req.requestURI = '/services/apexrest/v1/call-activity';
         req.httpMethod = 'POST';
@@ -177,10 +174,7 @@ private class CallActivityServiceTest {
 
     @IsTest
     static void testMissingAuthHeader() {
-        SettingsService.settingsMap.put('Webhook_Secret', new objectionproof__Application_Setting__mdt(
-            DeveloperName = 'Webhook_Secret',
-            objectionproof__Value__c = TEST_SECRET
-        ));
+        SettingsService.setApiKey(TEST_SECRET);
         RestRequest req = new RestRequest();
         req.requestURI = '/services/apexrest/v1/call-activity';
         req.httpMethod = 'POST';
@@ -198,10 +192,7 @@ private class CallActivityServiceTest {
 
     @IsTest
     static void testInvalidAuthToken() {
-        SettingsService.settingsMap.put('Webhook_Secret', new objectionproof__Application_Setting__mdt(
-            DeveloperName = 'Webhook_Secret',
-            objectionproof__Value__c = TEST_SECRET
-        ));
+        SettingsService.setApiKey(TEST_SECRET);
         RestRequest req = new RestRequest();
         req.requestURI = '/services/apexrest/v1/call-activity';
         req.httpMethod = 'POST';

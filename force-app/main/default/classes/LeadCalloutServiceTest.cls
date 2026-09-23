@@ -5,6 +5,7 @@ private class LeadCalloutServiceTest {
         public HTTPResponse respond(HTTPRequest req) {
             System.assert(req.getEndpoint().contains('objproof_lead_namedcred'), 'Expected lead named credential endpoint');
             System.assertEquals('POST', req.getMethod());
+            System.assertEquals(UserInfo.getOrganizationId(), req.getHeader('Salesforce-Org-Id'), 'Expected org id header');
 
             // Verify the body matches the call-lead API contract
             Map<String, Object> body = (Map<String, Object>) JSON.deserializeUntyped(req.getBody());
@@ -22,12 +23,7 @@ private class LeadCalloutServiceTest {
     @isTest
     static void testSendLeadCallout() {
         // Inject the API key setting for the test context.
-        SettingsService.settingsMap = new Map<String, Application_Setting__mdt>{
-            'Lead_Api_Key' => new Application_Setting__mdt(
-                DeveloperName = 'Lead_Api_Key',
-                objectionproof__Value__c = 'test-api-key'
-            )
-        };
+        SettingsService.setApiKey('test-api-key');
 
         Lead testLead = new Lead(
             FirstName = 'Test',
@@ -72,12 +68,7 @@ private class LeadCalloutServiceTest {
 
     @isTest
     static void testSkipsLeadWithNoPhone() {
-        SettingsService.settingsMap = new Map<String, Application_Setting__mdt>{
-            'Lead_Api_Key' => new Application_Setting__mdt(
-                DeveloperName = 'Lead_Api_Key',
-                objectionproof__Value__c = 'test-api-key'
-            )
-        };
+        SettingsService.setApiKey('test-api-key');
 
         Lead testLead = new Lead(
             FirstName = 'Test',
@@ -98,12 +89,7 @@ private class LeadCalloutServiceTest {
 
     @isTest
     static void testMissingLeadLogsWarning() {
-        SettingsService.settingsMap = new Map<String, Application_Setting__mdt>{
-            'Lead_Api_Key' => new Application_Setting__mdt(
-                DeveloperName = 'Lead_Api_Key',
-                objectionproof__Value__c = 'test-api-key'
-            )
-        };
+        SettingsService.setApiKey('test-api-key');
 
         // Use a fake Lead Id that won't exist in the database.
         Id fakeLeadId = Lead.SObjectType.getDescribe().getKeyPrefix() + '000000000001';

@@ -49,6 +49,18 @@ public without sharing class TaskCalloutService implements Queueable, Database.A
             ));
         }
 
+        String apiKey = SettingsService.getApiKey();
+        if (String.isBlank(apiKey)) {
+            logsToCreate.add(new Log__c(
+                objectionproof__Level__c = 'ERROR',
+                objectionproof__Message__c = 'API key is not configured. Set it on the Objection Proof setup tab.',
+                objectionproof__Context__c = logContext,
+                objectionproof__Triggering_User__c = triggeringUserId
+            ));
+            LoggerService.log(logsToCreate);
+            return;
+        }
+
         String callbackBaseUrl = this.secureSiteUrl + '/services/apexrest/objectionproof/v1/task-callback/';
         try {
             for (Task task : tasksToSend) {
@@ -66,6 +78,8 @@ public without sharing class TaskCalloutService implements Queueable, Database.A
                 req.setEndpoint('callout:objectionproof__objproof_namedcred');
                 req.setMethod('POST');
                 req.setHeader('Content-Type', 'application/json;charset=UTF-8');
+                req.setHeader('Salesforce-Org-Id', UserInfo.getOrganizationId());
+                req.setHeader('ObjectionProof-Token', apiKey);
     
                 // Construct the full callback URL with the unique token.
                 String fullCallbackUrl = callbackBaseUrl + task.op_callback_token__c;
@@ -81,7 +95,7 @@ public without sharing class TaskCalloutService implements Queueable, Database.A
                     'callTo' => task.op_call_to__c,
                     'ownerId' => task.OwnerId,
                     'ownerName' => task.Owner.Name,
-                    'source' => 'sf-bolder360'
+                    'source' => SettingsService.getString('Callout_Source', 'sf-bolder360')
                 };
                 String requestBody = JSON.serialize(bodyMap);
                 req.setBody(requestBody);

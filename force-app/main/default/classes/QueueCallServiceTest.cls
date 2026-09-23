@@ -5,6 +5,7 @@ private class QueueCallServiceTest {
         public HttpResponse respond(HttpRequest req) {
             System.assertEquals('POST', req.getMethod());
             System.assert(req.getEndpoint().contains('objproof_lead_namedcred'));
+            System.assertEquals(UserInfo.getOrganizationId(), req.getHeader('Salesforce-Org-Id'), 'Expected org id header');
 
             Map<String, Object> body = (Map<String, Object>) JSON.deserializeUntyped(req.getBody());
             System.assertEquals('test-api-key', (String) body.get('api_key'));
@@ -37,12 +38,7 @@ private class QueueCallServiceTest {
     }
 
     private static void injectApiKey() {
-        SettingsService.settingsMap = new Map<String, Application_Setting__mdt>{
-            'Lead_Api_Key' => new Application_Setting__mdt(
-                DeveloperName = 'Lead_Api_Key',
-                objectionproof__Value__c = 'test-api-key'
-            )
-        };
+        SettingsService.setApiKey('test-api-key');
     }
 
     @IsTest

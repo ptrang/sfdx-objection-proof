@@ -6,7 +6,7 @@ public with sharing class QueueCallTriggerHandler {
         for (Lead l : newLeads) {
             Lead old = oldMap.get(l.Id);
             // Only fire when status changes TO "call" — prevents re-trigger when set to "queued"/"failed".
-            if (l.op_ai_call_status__c == 'call' && old.op_ai_call_status__c != 'call') {
+            if (l.op_ai_call_status__c == AiCallStatus.CALL && old.op_ai_call_status__c != AiCallStatus.CALL) {
                 events.add(new QueueCallEvent__e(
                     RecordId__c = l.Id,
                     ObjectType__c = 'Lead'
@@ -22,7 +22,7 @@ public with sharing class QueueCallTriggerHandler {
 
         for (Opportunity o : newOpps) {
             Opportunity old = oldMap.get(o.Id);
-            if (o.op_ai_call_status__c == 'call' && old.op_ai_call_status__c != 'call') {
+            if (o.op_ai_call_status__c == AiCallStatus.CALL && old.op_ai_call_status__c != AiCallStatus.CALL) {
                 events.add(new QueueCallEvent__e(
                     RecordId__c = o.Id,
                     ObjectType__c = 'Opportunity'

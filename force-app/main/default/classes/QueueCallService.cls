@@ -23,11 +23,11 @@ public without sharing class QueueCallService implements Queueable, Database.All
         List<Log__c> logsToCreate = new List<Log__c>();
         Id triggeringUserId = UserInfo.getUserId();
 
-        String apiKey = SettingsService.getString('Lead_Api_Key', '');
-        if (String.isBlank(apiKey) || apiKey == 'CONFIGURE_POST_INSTALL') {
+        String apiKey = SettingsService.getApiKey();
+        if (String.isBlank(apiKey)) {
             logsToCreate.add(new Log__c(
                 objectionproof__Level__c = 'ERROR',
-                objectionproof__Message__c = 'Lead_Api_Key is not configured. Set it in Custom Metadata: Objection Proof Setting > Lead Api Key.',
+                objectionproof__Message__c = 'API key is not configured. Set it on the Objection Proof setup tab.',
                 objectionproof__Context__c = logContext,
                 objectionproof__Triggering_User__c = triggeringUserId
             ));
@@ -91,7 +91,7 @@ public without sharing class QueueCallService implements Queueable, Database.All
                         objectionproof__Triggering_User__c = triggeringUserId
                     ));
                     // Mark as failed since we can't queue without a phone
-                    updateStatus(l.Id, 'Lead', 'failed');
+                    updateStatus(l.Id, 'Lead', AiCallStatus.FAILED);
                     continue;
                 }
                 Map<String, String> body = new Map<String, String>{
@@ -156,7 +156,7 @@ public without sharing class QueueCallService implements Queueable, Database.All
                         objectionproof__Context__c = logContext,
                         objectionproof__Triggering_User__c = triggeringUserId
                     ));
-                    updateStatus(oppId, 'Opportunity', 'failed');
+                    updateStatus(oppId, 'Opportunity', AiCallStatus.FAILED);
                     continue;
                 }
 
@@ -168,7 +168,7 @@ public without sharing class QueueCallService implements Queueable, Database.All
                         objectionproof__Context__c = logContext,
                         objectionproof__Triggering_User__c = triggeringUserId
                     ));
-                    updateStatus(oppId, 'Opportunity', 'failed');
+                    updateStatus(oppId, 'Opportunity', AiCallStatus.FAILED);
                     continue;
                 }
 
@@ -204,6 +204,7 @@ public without sharing class QueueCallService implements Queueable, Database.All
             req.setEndpoint(ENDPOINT);
             req.setMethod('POST');
             req.setHeader('Content-Type', 'application/json;charset=UTF-8');
+            req.setHeader('Salesforce-Org-Id', UserInfo.getOrganizationId());
             req.setBody(JSON.serialize(body));
 
             try {
@@ -218,7 +219,7 @@ public without sharing class QueueCallService implements Queueable, Database.All
                         objectionproof__Context__c = logContext,
                         objectionproof__Triggering_User__c = triggeringUserId
                     ));
-                    updateStatus(recordId, objectType, 'queued');
+                    updateStatus(recordId, objectType, AiCallStatus.QUEUED);
                 } else if (statusCode == 409) {
                     logsToCreate.add(new Log__c(
                         objectionproof__Level__c = 'WARN',
@@ -226,7 +227,7 @@ public without sharing class QueueCallService implements Queueable, Database.All
                         objectionproof__Context__c = logContext,
                         objectionproof__Triggering_User__c = triggeringUserId
                     ));
-                    updateStatus(recordId, objectType, 'queued');
+                    updateStatus(recordId, objectType, AiCallStatus.QUEUED);
                 } else {
                     logsToCreate.add(new Log__c(
                         objectionproof__Level__c = 'ERROR',
@@ -234,7 +235,7 @@ public without sharing class QueueCallService implements Queueable, Database.All
                         objectionproof__Context__c = logContext,
                         objectionproof__Triggering_User__c = triggeringUserId
                     ));
-                    updateStatus(recordId, objectType, 'failed');
+                    updateStatus(recordId, objectType, AiCallStatus.FAILED);
                 }
             } catch (Exception e) {
                 logsToCreate.add(new Log__c(
@@ -243,7 +244,7 @@ public without sharing class QueueCallService implements Queueable, Database.All
                     objectionproof__Context__c = logContext,
                     objectionproof__Triggering_User__c = triggeringUserId
                 ));
-                updateStatus(recordId, objectType, 'failed');
+                updateStatus(recordId, objectType, AiCallStatus.FAILED);
             }
         }
 

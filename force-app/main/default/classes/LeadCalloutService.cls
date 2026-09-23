@@ -21,11 +21,11 @@ public without sharing class LeadCalloutService implements Queueable, Database.A
             objectionproof__Triggering_User__c = triggeringUserId
         ));
 
-        String apiKey = SettingsService.getString('Lead_Api_Key', '');
-        if (String.isBlank(apiKey) || apiKey == 'CONFIGURE_POST_INSTALL') {
+        String apiKey = SettingsService.getApiKey();
+        if (String.isBlank(apiKey)) {
             logsToCreate.add(new Log__c(
                 objectionproof__Level__c = 'ERROR',
-                objectionproof__Message__c = 'Lead_Api_Key is not configured. Set it in Custom Metadata: Objection Proof Setting > Lead Api Key.',
+                objectionproof__Message__c = 'API key is not configured. Set it on the Objection Proof setup tab.',
                 objectionproof__Context__c = logContext,
                 objectionproof__Triggering_User__c = triggeringUserId
             ));
@@ -70,6 +70,7 @@ public without sharing class LeadCalloutService implements Queueable, Database.A
                 req.setEndpoint('callout:objectionproof__objproof_lead_namedcred/api/call-lead');
                 req.setMethod('POST');
                 req.setHeader('Content-Type', 'application/json;charset=UTF-8');
+                req.setHeader('Salesforce-Org-Id', UserInfo.getOrganizationId());
 
                 String phone = String.isNotBlank(lead.Phone) ? lead.Phone : lead.MobilePhone;
                 // Strip non-digit characters for the 10-digit phone format

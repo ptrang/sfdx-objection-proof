@@ -74,6 +74,7 @@ global without sharing class TaskCallbackService {
             taskToUpdate.op_call_score_objection__c = payload.objection;
             taskToUpdate.op_call_score_remorse__c = payload.remorse;
             taskToUpdate.op_call_score__c = payload.score;
+            taskToUpdate.op_call_revenue__c = payload.revenue;
             // CRITICAL: Invalidate the token to make it single-use.
             taskToUpdate.op_callback_token__c = null;
 

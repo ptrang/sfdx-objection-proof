@@ -24,6 +24,22 @@ public with sharing class SettingsService {
         return defaultValue;
     }
 
+    // The API key lives in a protected custom setting so subscriber admins cannot
+    // read it back from Setup; only package code can.
+    public static String getApiKey() {
+        return Secure_Setting__c.getOrgDefaults().Api_Key__c;
+    }
+
+    public static Boolean isApiKeyConfigured() {
+        return String.isNotBlank(getApiKey());
+    }
+
+    public static void setApiKey(String apiKey) {
+        Secure_Setting__c setting = Secure_Setting__c.getOrgDefaults();
+        setting.Api_Key__c = apiKey;
+        upsert setting;
+    }
+
     public static Boolean getBoolean(String settingName) {
         String value = getString(settingName, 'false');
         return 'true'.equalsIgnoreCase(value);
