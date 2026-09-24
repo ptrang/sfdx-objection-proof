@@ -1,3 +1,5 @@
+> **Not needed (2026-09-23):** the team already has Partner Business Org access and a submitted listing. Kept for reference only.
+
 # Partner Business Org + ISVforce request (Partner Community case)
 
 **Where:** log in at https://partners.salesforce.com, then go to **Help → Log a Case** (Partner Operations / AgentExchange Onboarding). If the Partner Console shows an onboarding checklist with a "Request Partner Business Org" step, use that instead; it opens the same request.

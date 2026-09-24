@@ -10,10 +10,10 @@ Draft prepared 2026-09-23 for the Salesforce Business Plan Review. Items marked 
 |---|---|
 | Legal entity | Disruptor Solutions Incorporated |
 | Headquarters | Phoenix, Arizona |
-| Employees | 6–15 |
+| Employees | 12 |
 | Website | https://objectionproof.ai |
-| Partner Program status | Enrolled; Partner Business Org and ISVforce agreement requested (see `pbo-request.md`) |
-| Salesforce contacts | Patrick Trang (technical, patrick@closemoresales.com); **[NEEDS INPUT]** business contact |
+| Partner Program status | Partner Community access, Partner Business Org access, listing submitted |
+| Team building it | Disruptors / Close More Sales: Steve Trang, Patrick Trang (technical, patrick@closemoresales.com) |
 
 ## 2. Solution
 
@@ -39,8 +39,8 @@ Setup is guided by an in-app Setup tab (permission sets, API key, callback site,
 ## 4. Market and demand
 
 - Demand is validated by the existing objectionproof.ai SaaS, which has paying customers and is the company's main revenue engine.
-- Objection Proof customers already on Salesforce today: 1–5 (the platform also integrates with FollowUpBoss, Podio, ReSimpli, RealGeeks and others). **[NEEDS INPUT]**: total current customer count.
-- **[NEEDS INPUT]**: 2 or 3 existing customers willing to install the package as design partners or beta customers (Salesforce asks for this)
+- 5 existing Objection Proof customers already run Salesforce but don't use this package yet; they are the first conversion targets.
+- 3 beta customers on Salesforce.
 
 ## 5. Competition
 
@@ -52,7 +52,7 @@ Setup is guided by an in-app Setup tab (permission sets, API key, callback site,
 
 ## 6. Pricing and packaging
 
-- **Model:** the managed package is **free to install** and included with an Objection Proof subscription (coaching and/or AI Lead Manager). The listing shows the Objection Proof plan pricing. **[NEEDS INPUT]**: the plan price points to show on the listing.
+- **Model:** the managed package is **free**; there is no charge for it. It is included with the Objection Proof AI solution, priced at **$15,000 per year**.
 - **Free tier:** the package can be installed and configured at no cost. Scoring, AI calling and AI call logging require an active Objection Proof plan.
 - **Billing:** billed directly by Objection Proof, as today, through the existing platform billing. Orders are reported to Salesforce through the **Channel Order App (COA)** under the **ISVforce** agreement (15% revenue share; 10% above $20M per year).
 - **To confirm with the partner manager:** whether a free package whose value comes from an external paid subscription should be listed as "Free" or "Paid". This affects the revenue share and the $999 security review fee (free listings pay no review fee). Ask when the PBO request is answered.
@@ -64,16 +64,15 @@ Setup is guided by an in-app Setup tab (permission sets, API key, callback site,
 - **Listing:** copy written as answers to buyer problems ("How do I get every inbound lead called in 60 seconds and logged in Salesforce?"), because AgentExchange search is intent-based.
 - **Agentforce:** **[NEEDS INPUT / roadmap]**: an Agentforce action ("Queue an AI follow-up call", "Score this call") listed alongside the package during the Agentforce launch wave.
 - **Sales motion:** founder-led sales and demos. Co-selling with Salesforce AEs becomes a target once ARR from the listing justifies it.
-- **[NEEDS INPUT]**: dedicated marketing and sales headcount (even part-time)
+- Dedicated marketing: 1 marketer supports the solution.
 
 ## 8. Year-1 targets
 
 | Metric | Target |
 |---|---|
-| Listing go-live | **[NEEDS INPUT]** (realistic: 8 to 16 weeks after the first security review submission) |
-| Installs (year 1) | **[NEEDS INPUT]** |
-| Paying Salesforce customers (year 1) | 25–75 |
-| Revenue through the listing (year 1) | **[NEEDS INPUT]** |
+| Listing go-live | End of April **[confirm year]** |
+| Customers using the package (year 1) | 100 |
+| Revenue forecast (year 1) | $1.7M, pre-Salesforce collaboration |
 
 ## 9. Security, support and operations
 
