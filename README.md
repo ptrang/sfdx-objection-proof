@@ -88,7 +88,17 @@ Outbound HTTP callouts run as the **Automated Process** user (via platform event
 1. Open the **Objection Proof** app and go to the **Objection Proof** setup tab (requires the **Objection Proof Admin** permission set, which the installer gets automatically)
 2. In step 3, paste your API key from the Objection Proof dashboard and click **Save**
 
-The key is stored in a protected custom setting and can't be viewed after saving; use **Replace** to change it. Every outbound request sends it (`ObjectionProof-Token` header to n8n, `api_key` in the platform request body), along with a `Salesforce-Org-Id` header. The same key also authenticates inbound `call-activity` requests (`Authorization: Bearer <key>`).
+The key is stored in a protected custom setting and can't be viewed after saving; use **Replace** to change it. Every outbound request sends it (`ObjectionProof-Token` header to n8n, `api_key` in the platform request body), along with a `Salesforce-Org-Id` header.
+
+### 6. Connect the Objection Proof platform (OAuth integration user)
+
+The platform logs AI-made calls into Salesforce through the `call-activity` REST endpoint, authenticated with OAuth through the packaged **Objection Proof AI** external client app.
+
+1. Create a dedicated integration user (for example with the **Salesforce Integration** license and the **Minimum Access - API Only Integrations** profile)
+2. Assign it the **Objection Proof Integration** permission set (`objproof_integration_permission_set`). The profile must also allow **Edit Tasks**
+3. Make sure it can see and edit the Leads and Opportunities the platform will match (the permission set grants View All on Lead, Contact and Opportunity; edit access follows your sharing settings)
+4. Go to **Setup → External Client App Manager → Objection Proof AI → Policies**, enable the **client credentials flow**, and set **Run As** to the integration user
+5. Give the platform your My Domain URL; it calls `https://<your-domain>.my.salesforce.com/services/apexrest/objectionproof/v1/call-activity`
 
 ---
 
@@ -190,9 +200,10 @@ LIMIT 50
 | `objproof_admin_permission_set` | Objection Proof admins *(auto-assigned to installer)* | Setup tab (API key, permission set assignment) and read access to logs |
 | `objproof_permission_set` | Regular users | Read/write access to `op_*` fields on Task and Event; Apex class access |
 | `objproof_automation_permission_set` | **Automated Process User** | Named credential principal access for outbound callouts |
-| `objproof_site_permission_set` | Site guest user *(auto-assigned on install)* | Task read access + `TaskCallbackService` class access for inbound callbacks |
+| `objproof_integration_permission_set` | The **integration user** the Objection Proof platform signs in as (OAuth) | `call-activity` endpoint and the Lead/Contact/Opportunity/Task access it needs |
+| `objproof_site_permission_set` | Site guest user *(auto-assigned on install)* | `TaskCallbackService` class access only; no object or field access |
 
-> **Note on guest user permissions:** The guest user has read-only access to Task records at the object level. The callback service writes to Task using `AccessLevel.SYSTEM_MODE`, which is required because Salesforce does not permit guest users to hold edit permissions on standard objects.
+> **Note on guest user permissions:** The guest user has no object or field access. The callback service reads and writes the one Task matching the callback token using `SYSTEM_MODE`, because Salesforce does not permit guest users to hold edit permissions on standard objects.
 
 ---
 

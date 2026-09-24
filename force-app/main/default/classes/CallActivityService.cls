@@ -1,6 +1,12 @@
+// Called by the Objection Proof platform over OAuth (the Objection_Proof_AI
+// external client app) as a dedicated integration user holding
+// objproof_integration_permission_set. Salesforce authenticates the request before
+// this class runs. All queries and DML run in USER_MODE, so the integration user's
+// object, field and sharing access applies.
 @RestResource(urlMapping='/v1/call-activity/*')
-// without sharing: guest user context — SYSTEM_MODE handles CRUD bypass for inserts.
-global without sharing class CallActivityService {
+global with sharing class CallActivityService {
+
+    private static final Integer MAX_BODY_BYTES = 500000;
 
     private class CallPayload {
         public String prospect { get; set; }
@@ -22,38 +28,18 @@ global without sharing class CallActivityService {
         RestRequest request = RestContext.request;
         RestResponse response = RestContext.response;
 
-        // Validate Bearer token against the Objection Proof API key.
-        String expectedToken = SettingsService.getApiKey();
-        if (String.isBlank(expectedToken)) {
-            response.statusCode = 503;
-            response.responseBody = Blob.valueOf('{"error":"API key is not configured."}');
-            return;
-        }
-
-        String authHeader = request.headers.get('Authorization');
-        if (String.isBlank(authHeader) || !authHeader.startsWith('Bearer ')) {
-            response.statusCode = 401;
-            response.responseBody = Blob.valueOf('{"error":"Missing or invalid Authorization header."}');
-            return;
-        }
-
-        String providedToken = authHeader.substring(7).trim();
-        // Constant-time comparison to prevent timing attacks.
-        Blob expected = Blob.valueOf(expectedToken);
-        Blob provided = Blob.valueOf(providedToken);
-        if (!EncodingUtil.convertToHex(Crypto.generateDigest('SHA-256', expected))
-              .equals(EncodingUtil.convertToHex(Crypto.generateDigest('SHA-256', provided)))) {
-            response.statusCode = 401;
-            response.responseBody = Blob.valueOf('{"error":"Invalid authorization token."}');
-            return;
-        }
-
         if (request.requestBody == null || request.requestBody.size() == 0) {
             response.statusCode = 400;
             response.responseBody = Blob.valueOf('{"error":"Request body is required."}');
             return;
         }
+        if (request.requestBody.size() > MAX_BODY_BYTES) {
+            response.statusCode = 413;
+            response.responseBody = Blob.valueOf('{"error":"Request body is too large."}');
+            return;
+        }
 
+        Savepoint sp = Database.setSavepoint();
         try {
             CallPayload payload = (CallPayload) JSON.deserialize(
                 request.requestBody.toString(),
@@ -79,7 +65,7 @@ global without sharing class CallActivityService {
                         // Check if the Lead has been converted
                         List<Lead> leadCheck = [
                             SELECT Id, IsConverted, ConvertedContactId, ConvertedOpportunityId
-                            FROM Lead WHERE Id = :recordId LIMIT 1
+                            FROM Lead WHERE Id = :recordId WITH USER_MODE LIMIT 1
                         ];
                         if (!leadCheck.isEmpty() && leadCheck[0].IsConverted) {
                             // Follow the conversion chain
@@ -119,6 +105,7 @@ global without sharing class CallActivityService {
                         FIND :phone IN PHONE FIELDS
                         RETURNING Lead(Id, IsConverted, ConvertedContactId, ConvertedOpportunityId LIMIT 1),
                                    Contact(Id LIMIT 1)
+                        WITH USER_MODE
                     ];
                     List<Lead> leads = (List<Lead>) results[0];
                     List<Contact> contacts = (List<Contact>) results[1];
@@ -156,7 +143,7 @@ global without sharing class CallActivityService {
                     Phone = payload.prospect_phone,
                     LeadSource = 'AI Call'
                 );
-                Database.insert(newLead, AccessLevel.SYSTEM_MODE);
+                Database.insert(newLead, AccessLevel.USER_MODE);
                 whoId = newLead.Id;
                 matchedType = 'Lead';
             }
@@ -175,7 +162,7 @@ global without sharing class CallActivityService {
             if (whoId != null) { t.WhoId = whoId; }
             if (whatId != null) { t.WhatId = whatId; }
 
-            Database.insert(t, AccessLevel.SYSTEM_MODE);
+            Database.insert(t, AccessLevel.USER_MODE);
 
             // Create Call Analysis child record with all payload data
             op_Call_Analysis__c analysis = new op_Call_Analysis__c(
@@ -189,7 +176,7 @@ global without sharing class CallActivityService {
                 op_prospect_phone__c = payload.prospect_phone,
                 op_prospect_name__c = payload.prospect
             );
-            Database.insert(analysis, AccessLevel.SYSTEM_MODE);
+            Database.insert(analysis, AccessLevel.USER_MODE);
 
             // Build the combined notes for Lead/Opportunity
             String callNotes = buildCallNotes(payload);
@@ -203,7 +190,7 @@ global without sharing class CallActivityService {
                     op_ai_call_outcome__c = payload.outcome,
                     op_ai_call_appointment__c = payload.appointment
                 );
-                Database.update(l, AccessLevel.SYSTEM_MODE);
+                Database.update(l, AccessLevel.USER_MODE);
             }
 
             if (whatId != null) {
@@ -214,15 +201,22 @@ global without sharing class CallActivityService {
                     op_ai_call_outcome__c = payload.outcome,
                     op_ai_call_appointment__c = payload.appointment
                 );
-                Database.update(o, AccessLevel.SYSTEM_MODE);
+                Database.update(o, AccessLevel.USER_MODE);
             }
 
             response.statusCode = 201;
             response.responseBody = Blob.valueOf('{"taskId":"' + t.Id + '"}');
 
-        } catch (Exception e) {
+        } catch (JSONException e) {
+            Database.rollback(sp);
             response.statusCode = 400;
             response.responseBody = Blob.valueOf('{"error":"Invalid request body."}');
+        } catch (Exception e) {
+            Database.rollback(sp);
+            // Details go to the admin-only log, not to the caller.
+            LoggerService.log('ERROR', 'Call activity failed: ' + e.getMessage(), 'CallActivityService.createCallActivity');
+            response.statusCode = 400;
+            response.responseBody = Blob.valueOf('{"error":"Unable to record call activity."}');
         }
     }
 
@@ -250,6 +244,7 @@ global without sharing class CallActivityService {
         List<OpportunityContactRole> ocrs = [
             SELECT OpportunityId FROM OpportunityContactRole
             WHERE ContactId = :contactId
+            WITH USER_MODE
             ORDER BY CreatedDate DESC LIMIT 1
         ];
         return ocrs.isEmpty() ? null : ocrs[0].OpportunityId;

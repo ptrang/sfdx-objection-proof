@@ -8,7 +8,9 @@ public with sharing class SettingsService {
         // Only query the database if we are NOT running a test and the map hasn't been set.
         if (!Test.isRunningTest()) {
             settingsMap = new Map<String, Application_Setting__mdt>();
-            for (Application_Setting__mdt setting : [SELECT DeveloperName, Value__c FROM Application_Setting__mdt]) {
+            // SYSTEM_MODE: package configuration is read by every context (reps, the
+            // Automated Process user, the Site guest user). It holds no user data.
+            for (Application_Setting__mdt setting : [SELECT DeveloperName, Value__c FROM Application_Setting__mdt WITH SYSTEM_MODE]) {
                 settingsMap.put(setting.DeveloperName, setting);
             }
         } else {
@@ -34,10 +36,13 @@ public with sharing class SettingsService {
         return String.isNotBlank(getApiKey());
     }
 
+    // SYSTEM_MODE: the setting is Protected, so subscriber users can never have CRUD
+    // on it. Callers must authorize first (SetupWizardController checks the
+    // Manage_Objection_Proof custom permission).
     public static void setApiKey(String apiKey) {
         Secure_Setting__c setting = Secure_Setting__c.getOrgDefaults();
         setting.Api_Key__c = apiKey;
-        upsert setting;
+        Database.upsert(setting, AccessLevel.SYSTEM_MODE);
     }
 
     public static Boolean getBoolean(String settingName) {

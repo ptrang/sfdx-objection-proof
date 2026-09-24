@@ -114,7 +114,7 @@ public without sharing class LeadCalloutService implements Queueable, Database.A
                     if (statusCode < 200 || statusCode >= 300) {
                         logsToCreate.add(new Log__c(
                             objectionproof__Level__c = 'ERROR',
-                            objectionproof__Message__c = 'API returned ' + statusCode + ' for Lead Id: ' + lead.Id + '. Response: ' + res.getBody(),
+                            objectionproof__Message__c = 'API returned ' + statusCode + ' for Lead Id: ' + lead.Id,
                             objectionproof__Context__c = logContext,
                             objectionproof__Triggering_User__c = triggeringUserId
                         ));

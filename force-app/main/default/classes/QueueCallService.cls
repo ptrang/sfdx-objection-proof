@@ -231,7 +231,7 @@ public without sharing class QueueCallService implements Queueable, Database.All
                 } else {
                     logsToCreate.add(new Log__c(
                         objectionproof__Level__c = 'ERROR',
-                        objectionproof__Message__c = 'API returned ' + statusCode + ' for ' + objectType + ' Id: ' + recordId + '. Response: ' + res.getBody(),
+                        objectionproof__Message__c = 'API returned ' + statusCode + ' for ' + objectType + ' Id: ' + recordId,
                         objectionproof__Context__c = logContext,
                         objectionproof__Triggering_User__c = triggeringUserId
                     ));

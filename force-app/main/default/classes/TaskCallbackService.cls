@@ -1,3 +1,12 @@
+// Inbound scoring callback, served on the ObjProof Site and called by the external
+// scoring service as the Site guest user (no OAuth).
+//
+// without sharing + SYSTEM_MODE: the guest user holds no object or field access
+// (objproof_site_permission_set grants only this class), and Salesforce doesn't
+// allow guest users to edit Tasks. Access is authorized instead by the one-time
+// callback token: 128 random bits, generated per Task, matched exactly, and
+// cleared on first use. The service touches only the Task matching the token
+// and inserts its op_Call_Analysis__c child.
 @RestResource(urlMapping='/v1/task-callback/*')
 global without sharing class TaskCallbackService {
 
@@ -38,7 +47,7 @@ global without sharing class TaskCallbackService {
         }
 
         // Find the task using the unique, case-sensitive token.
-        List<Task> tasks = [SELECT Id, op_salescall_id__c, op_call_score__c FROM Task WHERE op_callback_token__c = :token LIMIT 1];
+        List<Task> tasks = [SELECT Id, op_salescall_id__c, op_call_score__c FROM Task WHERE op_callback_token__c = :token WITH SYSTEM_MODE LIMIT 1];
 
         if (tasks.isEmpty()) {
             response.statusCode = 404; // Not Found
@@ -78,9 +87,7 @@ global without sharing class TaskCallbackService {
             // CRITICAL: Invalidate the token to make it single-use.
             taskToUpdate.op_callback_token__c = null;
 
-            // SYSTEM_MODE bypasses CRUD/FLS so the guest user can write Task
-            // despite not having edit object permission (guest users cannot be
-            // granted edit on Task, but without sharing + SYSTEM_MODE handles it).
+            // SYSTEM_MODE: see the class comment.
             Database.update(taskToUpdate, AccessLevel.SYSTEM_MODE);
 
             // Create the child Call Analysis record with transcript and evaluation.

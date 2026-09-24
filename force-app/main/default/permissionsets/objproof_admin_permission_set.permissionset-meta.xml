@@ -8,6 +8,10 @@
         <apexClass>SetupWizardController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>Manage_Objection_Proof</name>
+    </customPermissions>
     <description>Assign to Objection Proof administrators. Grants the setup tab (API key, permission set assignment) and read access to package logs.</description>
     <fieldPermissions>
         <editable>false</editable>

@@ -29,11 +29,13 @@ public with sharing class TaskTriggerHandler {
     }
 
     private static String getCallbackBaseUrl() {
-        List<Site> sites = [SELECT Id FROM Site WHERE UrlPathPrefix = 'objproof' AND Status = 'Active' LIMIT 1];
+        // SYSTEM_MODE: this runs in the rep's trigger context, and reps can't read
+        // Site/SiteDetail setup objects. Only the public site URL is read.
+        List<Site> sites = [SELECT Id FROM Site WHERE UrlPathPrefix = 'objproof' AND Status = 'Active' WITH SYSTEM_MODE LIMIT 1];
         if (!sites.isEmpty()) {
             // SiteDetail.SecureURL is the authoritative public HTTPS URL for the site,
             // works across Enhanced Domain orgs (.my.site.com) and classic orgs (.salesforce-sites.com).
-            List<SiteDetail> details = [SELECT SecureURL FROM SiteDetail WHERE DurableId = :sites[0].Id LIMIT 1];
+            List<SiteDetail> details = [SELECT SecureURL FROM SiteDetail WHERE DurableId = :sites[0].Id WITH SYSTEM_MODE LIMIT 1];
             if (!details.isEmpty() && String.isNotBlank(details[0].SecureURL)) {
                 return details[0].SecureURL;
             }

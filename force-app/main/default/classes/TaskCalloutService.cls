@@ -102,7 +102,7 @@ public without sharing class TaskCalloutService implements Queueable, Database.A
     
                 logsToCreate.add(new Log__c(
                         objectionproof__Level__c = 'DEBUG',
-                        objectionproof__Message__c = 'Sending request for Task Id: ' + task.Id + '. Body: ' + requestBody,
+                        objectionproof__Message__c = 'Sending request for Task Id: ' + task.Id,
                         objectionproof__Context__c = logContext,
                         objectionproof__Triggering_User__c = triggeringUserId // Add user to log
                     ));

@@ -88,12 +88,14 @@ Every Apex class has an explicit sharing declaration. Justifications for `withou
 | Class | Declaration | Justification |
 |---|---|---|
 | `TaskTriggerHandler` | `with sharing` | Runs in user context; standard sharing applies |
+| `CallActivityService` | `with sharing` | Runs as the OAuth integration user; all queries and DML in `USER_MODE` |
+| `SetupWizardController` | `with sharing` | Runs as the admin; all queries and DML in `USER_MODE`, changes gated by the `Manage_Objection_Proof` custom permission |
 | `TaskCallbackService` | `without sharing` | Guest user context; token validates record access (see above) |
-| `TaskCalloutService` | `without sharing` | Runs as Automated Process User (system context); record set is already gated by the trigger |
-| `TaskCalloutEventHandler` | `without sharing` | Platform event subscriber runs as Automated Process User |
-| `PostInstallScript` | `without sharing` | Install handler requires privileged access to query User and PermissionSet records |
-| `LoggerService` | `with sharing` | Runs in caller's context; sharing rules apply |
-| `LogQueueable` | `with sharing` | Logging utility; sharing rules apply |
+| `TaskCalloutService`, `LeadCalloutService`, `QueueCallService` | `without sharing` | Queueables run as the Automated Process User (system context); record sets are already gated by the trigger or event |
+| `TaskCalloutEventHandler`, `LeadCalloutEventHandler`, `QueueCallEventHandler` | `without sharing` | Platform event subscribers run as the Automated Process User |
+| `PostInstallScript` | `without sharing` | Install handler runs as the package installation user; assigns only this package's permission sets |
+| `LoggerService`, `LogQueueable` | `with sharing` | Log inserts use `SYSTEM_MODE` because callers (reps, Automated Process, guest) have no `Log__c` access; only admins can read logs |
+| `SettingsService` | `with sharing` | Reads package configuration in `SYSTEM_MODE` (no user data); writes the protected API key setting only after the caller's permission check |
 
 ---
 
@@ -103,9 +105,15 @@ Every Apex class has an explicit sharing declaration. Justifications for `withou
 The package contains **no dynamic SOQL**. All queries use static SOQL with bind variables.
 
 ### FLS enforcement
-- `TaskCallbackService` — uses `AccessLevel.SYSTEM_MODE` for DML (guest user; FLS not applicable)
-- `TaskCalloutService` — SOQL uses `WITH SYSTEM_MODE` (Automated Process User; FLS not applicable in system context)
-- `LoggerService` — inserts `Log__c` records in caller's context; users with the permission set have the required field access
+Every query and DML statement declares its access mode explicitly (`WITH USER_MODE` / `AccessLevel.USER_MODE`, or `SYSTEM_MODE` with a justification comment in the code).
+
+- `CallActivityService`, `SetupWizardController`: `USER_MODE` throughout
+- `TaskCallbackService`: `SYSTEM_MODE` (guest user; see above)
+- `TaskCalloutService`, `LeadCalloutService`, `QueueCallService`: `SYSTEM_MODE` (Automated Process User)
+- `LoggerService`: `SYSTEM_MODE` insert of `Log__c`
+- `TaskTriggerHandler`: `SYSTEM_MODE` read of `Site`/`SiteDetail` to build the public callback URL
+
+Code Analyzer findings on the `SYSTEM_MODE` statements are documented as false positives in [`docs/security-review/false-positives.md`](docs/security-review/false-positives.md).
 
 ### CRUD enforcement
 - No user-context class performs DML on objects without the running user having appropriate permissions via the assigned permission set
@@ -117,7 +125,7 @@ The package contains **no dynamic SOQL**. All queries use static SOQL with bind 
 
 - **No credentials, tokens, API keys, or PII are hardcoded** in package source code or deployed metadata
 - The Objection Proof API key is stored in the protected custom setting `Secure_Setting__c` (not Custom Metadata). It is set post-installation from the setup tab, is never returned to the client, and is readable only by package code
-- The same key authenticates inbound `CallActivityService` requests (`Authorization: Bearer <key>`), compared as SHA-256 digests
+- `Log__c` never records secrets: request bodies (which contain the callback token) and raw API responses are not logged
 - The named credential endpoint URL is set to a placeholder and must be configured post-installation
 - All outbound callouts use `callout:objectionproof__objproof_namedcred` (named credential reference) — no hardcoded URLs in Apex
 
@@ -127,12 +135,22 @@ The package contains **no dynamic SOQL**. All queries use static SOQL with bind 
 
 The **ObjProof Profile** guest user has the minimum permissions necessary:
 
-- **Object permissions on Task**: Read only (`allowCreate=false`, `allowEdit=false`, `allowDelete=false`)
-- **Field permissions**: Read-only on all `op_*` fields (no write access at the FLS level)
 - **Apex class access**: `TaskCallbackService` only
-- **No access** to any other object, class, or org data
+- **No object or field permissions** at all
+- Site settings: Aura requests disabled, standard pages/search/lookups disabled, clickjack protection `SameOriginOnly`
 
 The guest user cannot browse, query, or modify any org data beyond the token-validated Task update executed by `TaskCallbackService`.
+
+---
+
+## Inbound Call Activity (OAuth)
+
+`CallActivityService` (`POST /services/apexrest/objectionproof/v1/call-activity`) is **not** exposed on the Site. The Objection Proof platform calls it with an OAuth access token obtained through the packaged external client app `Objection_Proof_AI`, as a dedicated integration user. Salesforce authenticates the request before Apex runs.
+
+- The integration user holds `objproof_integration_permission_set`: class access to `CallActivityService` plus the minimum object and field access it needs (read Account/Contact; read/create/edit Lead; read/edit Opportunity; create Task; create `op_Call_Analysis__c`)
+- All SOQL, SOSL and DML run in `USER_MODE`, so the integration user's CRUD, FLS and sharing are enforced
+- The request runs in a savepoint and rolls back entirely on any failure
+- Request bodies over 500 KB are rejected (413); error details go to the admin-only log, not to the caller
 
 ---
 

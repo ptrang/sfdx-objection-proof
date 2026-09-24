@@ -1,8 +1,10 @@
-// without sharing: install handlers run in a privileged context and must be able
-// to query and assign permission sets regardless of the installer's sharing access.
-global without sharing class PostInstallScript implements InstallHandler {
+// without sharing + SYSTEM_MODE: install handlers run as a special package
+// installation user, not the installer, so user-mode access checks don't apply.
+// The script only assigns this package's own permission sets to the installer and
+// to the ObjProof Site guest user.
+public without sharing class PostInstallScript implements InstallHandler {
 
-    global void onInstall(InstallContext ctx) {
+    public void onInstall(InstallContext ctx) {
         try {
             assignGuestUserPermissionSet();
         } catch (Exception e) {
@@ -22,6 +24,7 @@ global without sharing class PostInstallScript implements InstallHandler {
             SELECT Id FROM User
             WHERE Profile.Name = 'ObjProof Profile'
             AND IsActive = true
+            WITH SYSTEM_MODE
             LIMIT 1
         ];
         if (guestUsers.isEmpty()) return;
@@ -29,6 +32,7 @@ global without sharing class PostInstallScript implements InstallHandler {
         List<PermissionSet> permSets = [
             SELECT Id FROM PermissionSet
             WHERE Name = 'objproof_site_permission_set'
+            WITH SYSTEM_MODE
             LIMIT 1
         ];
         if (permSets.isEmpty()) return;
@@ -37,12 +41,13 @@ global without sharing class PostInstallScript implements InstallHandler {
             SELECT Id FROM PermissionSetAssignment
             WHERE AssigneeId = :guestUsers[0].Id
             AND PermissionSetId = :permSets[0].Id
+            WITH SYSTEM_MODE
         ];
         if (existing.isEmpty()) {
-            insert new PermissionSetAssignment(
+            Database.insert(new PermissionSetAssignment(
                 AssigneeId = guestUsers[0].Id,
                 PermissionSetId = permSets[0].Id
-            );
+            ), AccessLevel.SYSTEM_MODE);
         }
     }
 
@@ -52,6 +57,7 @@ global without sharing class PostInstallScript implements InstallHandler {
         List<PermissionSet> permSets = [
             SELECT Id FROM PermissionSet
             WHERE Name = :permSetName
+            WITH SYSTEM_MODE
             LIMIT 1
         ];
         if (permSets.isEmpty()) return;
@@ -60,12 +66,13 @@ global without sharing class PostInstallScript implements InstallHandler {
             SELECT Id FROM PermissionSetAssignment
             WHERE AssigneeId = :installerId
             AND PermissionSetId = :permSets[0].Id
+            WITH SYSTEM_MODE
         ];
         if (existing.isEmpty()) {
-            insert new PermissionSetAssignment(
+            Database.insert(new PermissionSetAssignment(
                 AssigneeId = installerId,
                 PermissionSetId = permSets[0].Id
-            );
+            ), AccessLevel.SYSTEM_MODE);
         }
     }
 }

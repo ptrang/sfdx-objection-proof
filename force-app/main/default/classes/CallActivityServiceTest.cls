@@ -1,10 +1,16 @@
 @IsTest
 private class CallActivityServiceTest {
 
-    private static final String TEST_SECRET = 'test-webhook-secret-abc123';
+    private static final String INTEGRATION_USERNAME = 'objproof-integration@example.com.test';
 
     @TestSetup
     static void makeData() {
+        // Run as the current user so the setup-object DML (User, PermissionSetAssignment)
+        // doesn't mix with the data DML below.
+        System.runAs(new User(Id = UserInfo.getUserId())) {
+            createIntegrationUser(INTEGRATION_USERNAME, true);
+        }
+
         Lead l = new Lead(
             FirstName = 'Patrick',
             LastName = 'TestLead',
@@ -40,12 +46,36 @@ private class CallActivityServiceTest {
         insert ocr;
     }
 
+    private static User createIntegrationUser(String username, Boolean withPermSet) {
+        User u = new User(
+            Username = username,
+            Email = 'objproof-integration@example.com',
+            LastName = 'Integration',
+            Alias = 'opint',
+            ProfileId = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1].Id,
+            TimeZoneSidKey = 'America/Phoenix',
+            LocaleSidKey = 'en_US',
+            EmailEncodingKey = 'UTF-8',
+            LanguageLocaleKey = 'en_US'
+        );
+        insert u;
+        if (withPermSet) {
+            insert new PermissionSetAssignment(
+                AssigneeId = u.Id,
+                PermissionSetId = [SELECT Id FROM PermissionSet WHERE Name = 'objproof_integration_permission_set' LIMIT 1].Id
+            );
+        }
+        return u;
+    }
+
+    private static User integrationUser() {
+        return [SELECT Id FROM User WHERE Username = :INTEGRATION_USERNAME LIMIT 1];
+    }
+
     private static RestRequest buildRequest(String body) {
-        SettingsService.setApiKey(TEST_SECRET);
         RestRequest req = new RestRequest();
         req.requestURI = '/services/apexrest/v1/call-activity';
         req.httpMethod = 'POST';
-        req.headers.put('Authorization', 'Bearer ' + TEST_SECRET);
         if (body != null) {
             req.requestBody = Blob.valueOf(body);
         }
@@ -74,7 +104,9 @@ private class CallActivityServiceTest {
         RestContext.response = res;
 
         Test.startTest();
-        CallActivityService.createCallActivity();
+        System.runAs(integrationUser()) {
+            CallActivityService.createCallActivity();
+        }
         Test.stopTest();
 
         System.assertEquals(201, res.statusCode, 'Should return 201 Created.');
@@ -126,7 +158,9 @@ private class CallActivityServiceTest {
         RestContext.response = res;
 
         Test.startTest();
-        CallActivityService.createCallActivity();
+        System.runAs(integrationUser()) {
+            CallActivityService.createCallActivity();
+        }
         Test.stopTest();
 
         System.assertEquals(201, res.statusCode);
@@ -161,7 +195,9 @@ private class CallActivityServiceTest {
         RestContext.response = res;
 
         Test.startTest();
-        CallActivityService.createCallActivity();
+        System.runAs(integrationUser()) {
+            CallActivityService.createCallActivity();
+        }
         Test.stopTest();
 
         System.assertEquals(201, res.statusCode);
@@ -173,61 +209,6 @@ private class CallActivityServiceTest {
     }
 
     @IsTest
-    static void testMissingAuthHeader() {
-        SettingsService.setApiKey(TEST_SECRET);
-        RestRequest req = new RestRequest();
-        req.requestURI = '/services/apexrest/v1/call-activity';
-        req.httpMethod = 'POST';
-        req.requestBody = Blob.valueOf('{"prospect_phone": "1234567890"}');
-        RestResponse res = new RestResponse();
-        RestContext.request = req;
-        RestContext.response = res;
-
-        Test.startTest();
-        CallActivityService.createCallActivity();
-        Test.stopTest();
-
-        System.assertEquals(401, res.statusCode, 'Missing auth header should return 401.');
-    }
-
-    @IsTest
-    static void testInvalidAuthToken() {
-        SettingsService.setApiKey(TEST_SECRET);
-        RestRequest req = new RestRequest();
-        req.requestURI = '/services/apexrest/v1/call-activity';
-        req.httpMethod = 'POST';
-        req.headers.put('Authorization', 'Bearer wrong-secret');
-        req.requestBody = Blob.valueOf('{"prospect_phone": "1234567890"}');
-        RestResponse res = new RestResponse();
-        RestContext.request = req;
-        RestContext.response = res;
-
-        Test.startTest();
-        CallActivityService.createCallActivity();
-        Test.stopTest();
-
-        System.assertEquals(401, res.statusCode, 'Wrong token should return 401.');
-    }
-
-    @IsTest
-    static void testWebhookSecretNotConfigured() {
-        RestRequest req = new RestRequest();
-        req.requestURI = '/services/apexrest/v1/call-activity';
-        req.httpMethod = 'POST';
-        req.headers.put('Authorization', 'Bearer something');
-        req.requestBody = Blob.valueOf('{"prospect_phone": "1234567890"}');
-        RestResponse res = new RestResponse();
-        RestContext.request = req;
-        RestContext.response = res;
-
-        Test.startTest();
-        CallActivityService.createCallActivity();
-        Test.stopTest();
-
-        System.assertEquals(503, res.statusCode, 'Should return 503 when secret is not configured.');
-    }
-
-    @IsTest
     static void testMissingPhoneAndNotes() {
         RestRequest req = buildRequest('{"prospect": "Nobody", "summary": "No phone"}');
         RestResponse res = new RestResponse();
@@ -235,7 +216,9 @@ private class CallActivityServiceTest {
         RestContext.response = res;
 
         Test.startTest();
-        CallActivityService.createCallActivity();
+        System.runAs(integrationUser()) {
+            CallActivityService.createCallActivity();
+        }
         Test.stopTest();
 
         System.assertEquals(400, res.statusCode);
@@ -249,7 +232,9 @@ private class CallActivityServiceTest {
         RestContext.response = res;
 
         Test.startTest();
-        CallActivityService.createCallActivity();
+        System.runAs(integrationUser()) {
+            CallActivityService.createCallActivity();
+        }
         Test.stopTest();
 
         System.assertEquals(400, res.statusCode);
@@ -287,7 +272,9 @@ private class CallActivityServiceTest {
         RestContext.response = res;
 
         Test.startTest();
-        CallActivityService.createCallActivity();
+        System.runAs(integrationUser()) {
+            CallActivityService.createCallActivity();
+        }
         Test.stopTest();
 
         System.assertEquals(201, res.statusCode);
@@ -322,7 +309,9 @@ private class CallActivityServiceTest {
         RestContext.response = res;
 
         Test.startTest();
-        CallActivityService.createCallActivity();
+        System.runAs(integrationUser()) {
+            CallActivityService.createCallActivity();
+        }
         Test.stopTest();
 
         System.assertEquals(201, res.statusCode, 'Should return 201 Created.');
@@ -344,5 +333,42 @@ private class CallActivityServiceTest {
         List<Task> tasks = [SELECT WhoId FROM Task WHERE Subject = 'AI Call from BrandNew'];
         System.assertEquals(1, tasks.size());
         System.assertEquals(newLeads[0].Id, tasks[0].WhoId, 'Task should be linked to the new Lead.');
+    }
+
+    @IsTest
+    static void testUserWithoutPermissionSetIsRejected() {
+        User noAccess;
+        System.runAs(new User(Id = UserInfo.getUserId())) {
+            noAccess = createIntegrationUser('objproof-noaccess@example.com.test', false);
+        }
+        RestRequest req = buildRequest('{"prospect": "Nobody", "prospect_phone": "0000000000"}');
+        RestResponse res = new RestResponse();
+        RestContext.request = req;
+        RestContext.response = res;
+
+        Test.startTest();
+        System.runAs(noAccess) {
+            CallActivityService.createCallActivity();
+        }
+        Test.stopTest();
+
+        System.assertEquals(400, res.statusCode, 'User mode should block a user without the integration permission set.');
+        System.assertEquals(0, [SELECT COUNT() FROM Lead WHERE LastName = 'Nobody'], 'Rolled back: no Lead should remain.');
+    }
+
+    @IsTest
+    static void testOversizedBodyRejected() {
+        RestRequest req = buildRequest('{"summary": "' + 'x'.repeat(500001) + '"}');
+        RestResponse res = new RestResponse();
+        RestContext.request = req;
+        RestContext.response = res;
+
+        Test.startTest();
+        System.runAs(integrationUser()) {
+            CallActivityService.createCallActivity();
+        }
+        Test.stopTest();
+
+        System.assertEquals(413, res.statusCode);
     }
 }

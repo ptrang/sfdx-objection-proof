@@ -4,7 +4,10 @@ public with sharing class LoggerService {
         try {
             List<Log__c> logsToInsert = (List<Log__c>) JSON.deserialize(logsAsJson, List<Log__c>.class);
             if (logsToInsert != null && !logsToInsert.isEmpty()) {
-                Database.insert(logsToInsert, false);
+                // SYSTEM_MODE: logs are written from every context (reps, the Automated
+                // Process user, the Site guest user), none of which have Log__c create
+                // access. Only admins can read logs (objproof_admin_permission_set).
+                Database.insert(logsToInsert, false, AccessLevel.SYSTEM_MODE);
             }
         } catch (Exception e) {
             System.debug('LoggerService.insertLogsNow FAILED: ' + e.getMessage());

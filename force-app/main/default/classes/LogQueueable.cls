@@ -11,7 +11,8 @@ public with sharing class LogQueueable implements Queueable {
             List<Log__c> logsToInsert = (List<Log__c>) JSON.deserialize(logsAsJson, List<Log__c>.class);
             if (logsToInsert != null && !logsToInsert.isEmpty()) {
                 // This DML now runs in its own safe, isolated transaction.
-                Database.insert(logsToInsert, false);
+                // SYSTEM_MODE: see LoggerService.insertLogsNow.
+                Database.insert(logsToInsert, false, AccessLevel.SYSTEM_MODE);
             }
         } catch (Exception e) {
             // If the queueable fails, write to the debug log as a final fallback.
