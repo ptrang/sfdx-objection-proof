@@ -46,8 +46,8 @@ No High findings.
 
 | Risk | Finding | Fix |
 |---|---|---|
-| Medium | Missing anti-clickjacking header | Send `X-Frame-Options: DENY` (or CSP `frame-ancestors 'none'`) |
-| Medium | Cross-domain misconfiguration (permissive CORS) | Restrict `Access-Control-Allow-Origin` on `/api/*` to known origins; server-to-server callers don't need CORS |
+| Medium | Missing anti-clickjacking header | `X-Frame-Options: SAMEORIGIN` plus CSP `frame-ancestors 'self'` |
+| Medium | Cross-domain misconfiguration (`Access-Control-Allow-Origin: *`) | The `*` comes from page responses; restrict pages to the app origin. `/api` routes send no `Access-Control-Allow-Origin` (verified); leave them unchanged, since the Chrome extension calls `/api/queue-call` cross-origin. |
 | Medium | Content Security Policy not set | Add a CSP, starting in `Content-Security-Policy-Report-Only` mode |
 | Low | `X-Content-Type-Options` missing | Send `X-Content-Type-Options: nosniff` |
 | Info | Cache-control directives, suspicious comments in JS bundles, "retrieved from cache" on `/api` | Review: API responses should send `Cache-Control: no-store` |
@@ -55,5 +55,5 @@ No High findings.
 The same scan also turned up a code issue: on a malformed JSON body, `POST /api/call-lead` writes the caller's `api_key` and the raw body to the console log and to its failure log. It should log neither.
 
 ### Still to do
-- Fix the headers above on the platform, then re-run the baseline
+- Deploy the header fix (platform branch `feat/security-headers`) and the logging fix (`fix/call-lead-no-secret-logging`), then re-run the baseline
 - Active scan against a staging platform deployment and a staging n8n webhook
