@@ -8,9 +8,9 @@ Draft prepared 2026-09-23 for the Salesforce Business Plan Review. Items marked 
 
 | | |
 |---|---|
-| Legal entity | **[NEEDS INPUT]** (the assessment guessed "TH Real Estate Education LLC"; confirm the exact registered name and state) |
+| Legal entity | Disruptor Solutions Incorporated |
 | Headquarters | Phoenix, Arizona |
-| Founded / employees | **[NEEDS INPUT]** (founder-led; Steve Trang plus contractors) |
+| Employees | 6–15 |
 | Website | https://objectionproof.ai |
 | Partner Program status | Enrolled; Partner Business Org and ISVforce agreement requested (see `pbo-request.md`) |
 | Salesforce contacts | Patrick Trang (technical, patrick@closemoresales.com); **[NEEDS INPUT]** business contact |
@@ -39,7 +39,7 @@ Setup is guided by an in-app Setup tab (permission sets, API key, callback site,
 ## 4. Market and demand
 
 - Demand is validated by the existing objectionproof.ai SaaS, which has paying customers and is the company's main revenue engine.
-- **[NEEDS INPUT]**: number of current customers, and how many already use Salesforce (today the platform integrates with Salesforce, FollowUpBoss, Podio, ReSimpli, RealGeeks and others)
+- Objection Proof customers already on Salesforce today: 1–5 (the platform also integrates with FollowUpBoss, Podio, ReSimpli, RealGeeks and others). **[NEEDS INPUT]**: total current customer count.
 - **[NEEDS INPUT]**: 2 or 3 existing customers willing to install the package as design partners or beta customers (Salesforce asks for this)
 
 ## 5. Competition
@@ -72,7 +72,7 @@ Setup is guided by an in-app Setup tab (permission sets, API key, callback site,
 |---|---|
 | Listing go-live | **[NEEDS INPUT]** (realistic: 8 to 16 weeks after the first security review submission) |
 | Installs (year 1) | **[NEEDS INPUT]** |
-| Paying Salesforce customers (year 1) | **[NEEDS INPUT]** |
+| Paying Salesforce customers (year 1) | 25–75 |
 | Revenue through the listing (year 1) | **[NEEDS INPUT]** |
 
 ## 9. Security, support and operations

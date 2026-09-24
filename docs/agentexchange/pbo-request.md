@@ -10,12 +10,12 @@
 >
 > We are an enrolled ISV partner preparing to list our managed package on AgentExchange, and we need a Partner Business Org (PBO) and the ISVforce agreement.
 >
-> - Company: [LEGAL ENTITY NAME]
-> - Partner account / community user: [PARTNER ACCOUNT NAME], patrick@closemoresales.com
+> - Company: Disruptor Solutions Incorporated
+> - Partner account / community user: Disruptor Solutions Incorporated, patrick@closemoresales.com
 > - Product: Objection Proof AI, an AI sales coaching and AI calling integration for Sales Cloud
 > - Package: "Objection Proof", second-generation managed package, namespace `objectionproof`, package ID 0HogL0000000QKHSA2
 > - Dev Hub org ID: 00DgL000006LHGvUAO (owns the package and namespace link)
-> - Listing type: paid, ISVforce (customers use their own Salesforce licenses)
+> - Pricing: the package is free to install and included with an Objection Proof subscription, which we bill directly. Customers use their own Salesforce licenses. Please advise whether this should be listed as Free or Paid, and how ISVforce / Channel Order App reporting applies.
 >
 > Please:
 > 1. Provision a Partner Business Org for our partner account, with the License Management App (LMA) and Channel Order App (COA) available.
