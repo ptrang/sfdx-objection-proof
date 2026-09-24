@@ -54,6 +54,13 @@ No High findings.
 
 The same scan also turned up a code issue: on a malformed JSON body, `POST /api/call-lead` writes the caller's `api_key` and the raw body to the console log and to its failure log. It should log neither.
 
+### 2026-09-23: active scan, `/api/call-lead` and `/api/queue-call` (Vercel preview)
+
+- Scope: only these two endpoints, with no spider. The requests used the API key of an **inactive** client (222). The live `queue_call_single` and `call-lead` both reject inactive clients, so no call could be placed or queued. 0 leads were created.
+- Access: through `scripts/dast/bypass-proxy.mjs`, which adds the Vercel protection bypass header to every request. ZAP's own header injection only covered the seed requests; earlier runs that way were invalid and were discarded.
+- Coverage: 1,673 attack requests reached `call-lead` (counted from its rejection log rows).
+- **Result: no High, Medium or Low findings on the endpoints' behavior.** The one Low finding (`X-Content-Type-Options` missing on `/api/queue-call`) came from a preview built before the header fix; production has sent `nosniff` since PR #52.
+- Report: `scripts/dast/reports/20260923-223443/zap-active-endpoints.pdf` (upload this with the review)
+
 ### Still to do
-- Deploy the header fix (platform branch `feat/security-headers`) and the logging fix (`fix/call-lead-no-secret-logging`), then re-run the baseline
-- Active scan against a staging platform deployment and a staging n8n webhook
+- The n8n scoring webhook (self-hosted) has not been actively scanned yet
