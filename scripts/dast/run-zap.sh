@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Run an OWASP ZAP automation plan headlessly.
 #   scripts/dast/run-zap.sh baseline                         # passive, production-safe
-#   PLATFORM_URL=https://<preview>.vercel.app N8N_WEBHOOK_URL=https://<staging n8n>/webhook/<id> \
-#     API_KEY=<staging key> scripts/dast/run-zap.sh active   # attacks: staging only
+#   PLATFORM_URL=https://<preview>.vercel.app API_KEY=<inactive client key> \
+#     VERCEL_BYPASS=<bypass secret> scripts/dast/run-zap.sh active   # attacks 2 endpoints on a preview
 set -euo pipefail
 
 PLAN="${1:?usage: run-zap.sh baseline|active}"
@@ -14,8 +14,8 @@ export REPORT_DIR="${REPORT_DIR:-$HERE/reports/$(date +%Y%m%d-%H%M%S)}"
 mkdir -p "$REPORT_DIR"
 
 if [[ "$PLAN" == "active" ]]; then
-  : "${N8N_WEBHOOK_URL:?set N8N_WEBHOOK_URL to a staging n8n webhook}"
-  : "${API_KEY:?set API_KEY to a staging test key}"
+  : "${API_KEY:?set API_KEY to an INACTIVE test client's key}"
+  : "${VERCEL_BYPASS:?set VERCEL_BYPASS to the preview's protection bypass secret}"
   if [[ "$PLATFORM_URL" == *"app.objectionproof.ai"* ]]; then
     echo "Refusing to run an active scan against production ($PLATFORM_URL)." >&2
     exit 1

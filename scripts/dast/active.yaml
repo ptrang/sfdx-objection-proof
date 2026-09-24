@@ -1,20 +1,34 @@
-# Full active scan: ONLY against staging / preview deployments, never production.
-# PLATFORM_URL = a staging or Vercel preview URL of the platform.
-# N8N_WEBHOOK_URL = a staging copy of the n8n scoring webhook (self-hosted n8n).
-# API_KEY = a test customer's API key on that staging environment.
+# Active scan of ONLY the two platform endpoints the package calls:
+#   /api/call-lead and /api/queue-call
+# There is no spider, and the context is limited to those two paths, so no
+# other route is attacked. That matters because a Vercel preview shares the
+# production database.
+#
+# PLATFORM_URL  a Vercel preview (never production; run-zap.sh refuses it)
+# API_KEY       the key of an INACTIVE test client, so every request stops at the
+#               auth check and no call is placed or queued
+# VERCEL_BYPASS the preview's "Protection Bypass for Automation" secret
 env:
   contexts:
-    - name: objectionproof-staging
+    - name: objectionproof-endpoints
       urls:
-        - ${PLATFORM_URL}
-        - ${N8N_WEBHOOK_URL}
+        - ${PLATFORM_URL}/api/call-lead
+        - ${PLATFORM_URL}/api/queue-call
       includePaths:
-        - ${PLATFORM_URL}.*
-        - ${N8N_WEBHOOK_URL}.*
+        - ${PLATFORM_URL}/api/call-lead.*
+        - ${PLATFORM_URL}/api/queue-call.*
   parameters:
     failOnError: true
     progressToStdout: true
 jobs:
+  - type: replacer
+    parameters:
+      deleteAllRules: true
+    rules:
+      - description: Vercel preview protection bypass
+        matchType: req_header
+        matchString: x-vercel-protection-bypass
+        replacementString: ${VERCEL_BYPASS}
   - type: passiveScan-config
   - type: requestor
     requests:
@@ -23,41 +37,37 @@ jobs:
         headers:
           - "Content-Type: application/json"
           - "Salesforce-Org-Id: 00D000000000000EAA"
-        data: '{"api_key":"${API_KEY}","lead_phone":"5550000000","full_name":"DAST Probe","prospect_email":"dast@example.com","city":"Phoenix","state":"AZ","zip":"85001"}'
+          - "x-vercel-protection-bypass: ${VERCEL_BYPASS}"
+        data: '{"api_key":"${API_KEY}","lead_phone":"6025550100","full_name":"DAST Probe","prospect_email":"dast@example.com","street_address":"1 Test St","city":"Phoenix","state":"AZ","zip":"85001"}'
       - url: ${PLATFORM_URL}/api/queue-call
         method: POST
         headers:
           - "Content-Type: application/json"
           - "Salesforce-Org-Id: 00D000000000000EAA"
-        data: '{"api_key":"${API_KEY}","lead_phone":"5550000000","full_name":"DAST Probe","call_type":"never_reached_fu"}'
-      - url: ${N8N_WEBHOOK_URL}
-        method: POST
-        headers:
-          - "Content-Type: application/json;charset=UTF-8"
-          - "ObjectionProof-Token: ${API_KEY}"
-          - "Salesforce-Org-Id: 00D000000000000EAA"
-        data: '{"taskId":"00T000000000000AAA","title":"DAST Probe","recordingUrl":"https://example.com/dast.mp3","callbackUrl":"https://example.invalid/services/apexrest/objectionproof/v1/task-callback/dast","callFrom":"5550000001","callTo":"5550000000","whoId":"00Q000000000000AAA","whoName":"DAST Probe","ownerId":"005000000000000AAA","ownerName":"DAST","source":"sf-bolder360"}'
-  - type: spider
-    parameters:
-      context: objectionproof-staging
-      maxDuration: 5
+          - "x-vercel-protection-bypass: ${VERCEL_BYPASS}"
+        data: '{"api_key":"${API_KEY}","lead_phone":"6025550100","full_name":"DAST Probe","call_type":"never_reached_fu","city":"Phoenix","state":"AZ","zip":"85001"}'
   - type: passiveScan-wait
     parameters:
-      maxDuration: 10
+      maxDuration: 5
   - type: activeScan
     parameters:
-      context: objectionproof-staging
-      maxScanDurationInMins: 60
+      context: objectionproof-endpoints
+      maxScanDurationInMins: 45
       maxRuleDurationInMins: 5
   - type: report
     parameters:
       template: traditional-html
       reportDir: ${REPORT_DIR}
-      reportFile: zap-active-staging
-      reportTitle: Objection Proof - ZAP active scan (staging)
+      reportFile: zap-active-endpoints
+      reportTitle: Objection Proof - ZAP active scan (call-lead, queue-call)
   - type: report
     parameters:
       template: traditional-pdf
       reportDir: ${REPORT_DIR}
-      reportFile: zap-active-staging
-      reportTitle: Objection Proof - ZAP active scan (staging)
+      reportFile: zap-active-endpoints
+      reportTitle: Objection Proof - ZAP active scan (call-lead, queue-call)
+  - type: report
+    parameters:
+      template: traditional-json
+      reportDir: ${REPORT_DIR}
+      reportFile: zap-active-endpoints

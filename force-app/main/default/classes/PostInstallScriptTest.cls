@@ -16,6 +16,11 @@ private class PostInstallScriptTest {
         }
         System.assert(assigned.contains('objproof_permission_set'), 'Installer should get the user permission set');
         System.assert(assigned.contains('objproof_admin_permission_set'), 'Installer should get the admin permission set');
+
+        List<Log__c> logs = [SELECT Level__c, Message__c FROM Log__c WHERE Context__c = 'PostInstallScript'];
+        System.assertEquals(1, logs.size(), 'Each install should write one summary row');
+        System.assert(logs[0].Message__c.contains('installer=' + UserInfo.getUserId()), logs[0].Message__c);
+        System.assert(!logs[0].Message__c.contains('FAILED'), logs[0].Message__c);
     }
 
     @IsTest

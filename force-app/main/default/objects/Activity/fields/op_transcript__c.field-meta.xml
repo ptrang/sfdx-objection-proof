@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>op_transcript__c</fullName>
+    <description>Deprecated since 1.12. The call transcript is stored on the Call Analysis record (op_Call_Analysis__c). Kept only because released package fields can't be removed.</description>
+    <inlineHelpText>Deprecated. See the related Call Analysis record.</inlineHelpText>
+    <label>Transcript (OP)</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <type>TextArea</type>
+</CustomField>

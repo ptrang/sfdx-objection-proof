@@ -7,7 +7,7 @@
       "default": true,
       "package": "Objection Proof",
       "versionDescription": "Coaching and analysis on your sales calls to improve process",
-      "postInstallClass": "PostInstallScript",
+      "postInstallScript": "PostInstallScript",
       "ancestorVersion": "HIGHEST"
     }
   ],
@@ -40,6 +40,10 @@
     "Objection Proof@1.8.0-1": "04tgL0000005rYLQAY",
     "Objection Proof@1.9.0-1": "04tgL0000005rbZQAQ",
     "Objection Proof@1.10.0-1": "04tgL0000008SvBQAU",
-    "Objection Proof@1.11.0-1": "04tgL000000C1zdQAC"
+    "Objection Proof@1.11.0-1": "04tgL000000C1zdQAC",
+    "Objection Proof@1.12.0-1": "04tgL000000VkMjQAK",
+    "Objection Proof@1.12.0-2": "04tgL000000VkTBQA0",
+    "Objection Proof@1.12.0-4": "04tgL000000VkbFQAS",
+    "Objection Proof@1.12.0-5": "04tgL000000VkcrQAC"
   }
 }
