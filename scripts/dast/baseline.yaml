@@ -1,0 +1,53 @@
+# Passive baseline: safe for production. Sends a few ordinary requests
+# (with an invalid API key) and only analyses the responses. No attacks.
+env:
+  contexts:
+    - name: objectionproof-platform
+      urls:
+        - ${PLATFORM_URL}
+      includePaths:
+        - ${PLATFORM_URL}.*
+  parameters:
+    failOnError: true
+    progressToStdout: true
+jobs:
+  - type: passiveScan-config
+    parameters:
+      maxAlertsPerRule: 10
+  - type: requestor
+    parameters:
+      user: ""
+    requests:
+      - url: ${PLATFORM_URL}/
+        method: GET
+      - url: ${PLATFORM_URL}/api/call-lead
+        method: POST
+        headers:
+          - "Content-Type: application/json"
+          - "Salesforce-Org-Id: 00D000000000000EAA"
+        data: '{"api_key":"dast-invalid-key","lead_phone":"5550000000","full_name":"DAST Probe"}'
+      - url: ${PLATFORM_URL}/api/queue-call
+        method: POST
+        headers:
+          - "Content-Type: application/json"
+          - "Salesforce-Org-Id: 00D000000000000EAA"
+        data: '{"api_key":"dast-invalid-key","lead_phone":"5550000000","call_type":"never_reached_fu"}'
+  - type: spider
+    parameters:
+      context: objectionproof-platform
+      maxDuration: 2
+      maxDepth: 3
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 5
+  - type: report
+    parameters:
+      template: traditional-html
+      reportDir: ${REPORT_DIR}
+      reportFile: zap-baseline-platform
+      reportTitle: Objection Proof platform - ZAP passive baseline
+  - type: report
+    parameters:
+      template: traditional-json
+      reportDir: ${REPORT_DIR}
+      reportFile: zap-baseline-platform

@@ -54,6 +54,11 @@
     </classAccesses>
     <description>Objection Proof Permission Set</description>
     <fieldPermissions>
+        <editable>false</editable>
+        <field>op_Call_Analysis__c.op_external_call_id__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>true</editable>
         <field>Event.op_call_from__c</field>
         <readable>true</readable>

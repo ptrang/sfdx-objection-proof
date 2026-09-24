@@ -21,6 +21,7 @@ global with sharing class CallActivityService {
         public String prospect_notes { get; set; }
         public String subject { get; set; }
         public String timezone { get; set; }
+        public String external_call_id { get; set; }
     }
 
     @HttpPost
@@ -40,6 +41,7 @@ global with sharing class CallActivityService {
         }
 
         Savepoint sp = Database.setSavepoint();
+        String externalCallId;
         try {
             CallPayload payload = (CallPayload) JSON.deserialize(
                 request.requestBody.toString(),
@@ -49,6 +51,17 @@ global with sharing class CallActivityService {
             if (String.isBlank(payload.prospect_phone) && String.isBlank(payload.prospect_notes)) {
                 response.statusCode = 400;
                 response.responseBody = Blob.valueOf('{"error":"prospect_phone or prospect_notes is required."}');
+                return;
+            }
+
+            // A retried request for a call we already recorded returns the existing Task.
+            externalCallId = String.isNotBlank(payload.external_call_id) ? payload.external_call_id.trim() : null;
+            if (externalCallId != null && externalCallId.length() > 255) {
+                response.statusCode = 400;
+                response.responseBody = Blob.valueOf('{"error":"external_call_id must be 255 characters or fewer."}');
+                return;
+            }
+            if (externalCallId != null && respondIfDuplicate(externalCallId, response)) {
                 return;
             }
 
@@ -174,7 +187,8 @@ global with sharing class CallActivityService {
                 op_outcome__c = payload.outcome,
                 op_appointment__c = payload.appointment,
                 op_prospect_phone__c = payload.prospect_phone,
-                op_prospect_name__c = payload.prospect
+                op_prospect_name__c = payload.prospect,
+                op_external_call_id__c = externalCallId
             );
             Database.insert(analysis, AccessLevel.USER_MODE);
 
@@ -211,6 +225,17 @@ global with sharing class CallActivityService {
             Database.rollback(sp);
             response.statusCode = 400;
             response.responseBody = Blob.valueOf('{"error":"Invalid request body."}');
+        } catch (DmlException e) {
+            Database.rollback(sp);
+            // Two concurrent requests for the same call: the unique external ID rejects the
+            // second one, so report the Task the first one created.
+            if (externalCallId != null && e.getDmlType(0) == StatusCode.DUPLICATE_VALUE
+                    && respondIfDuplicate(externalCallId, response)) {
+                return;
+            }
+            LoggerService.log('ERROR', 'Call activity failed: ' + e.getMessage(), 'CallActivityService.createCallActivity');
+            response.statusCode = 400;
+            response.responseBody = Blob.valueOf('{"error":"Unable to record call activity."}');
         } catch (Exception e) {
             Database.rollback(sp);
             // Details go to the admin-only log, not to the caller.
@@ -218,6 +243,24 @@ global with sharing class CallActivityService {
             response.statusCode = 400;
             response.responseBody = Blob.valueOf('{"error":"Unable to record call activity."}');
         }
+    }
+
+    private static Boolean respondIfDuplicate(String externalCallId, RestResponse response) {
+        List<op_Call_Analysis__c> existing = [
+            SELECT op_Task__c FROM op_Call_Analysis__c
+            WHERE op_external_call_id__c = :externalCallId
+            WITH USER_MODE
+            LIMIT 1
+        ];
+        if (existing.isEmpty()) {
+            return false;
+        }
+        response.statusCode = 200;
+        response.responseBody = Blob.valueOf(JSON.serialize(new Map<String, Object>{
+            'taskId' => existing[0].op_Task__c,
+            'duplicate' => true
+        }));
+        return true;
     }
 
     private static String buildCallNotes(CallPayload payload) {

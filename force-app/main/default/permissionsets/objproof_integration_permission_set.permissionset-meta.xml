@@ -7,6 +7,11 @@
     <description>Assign to the integration user that the Objection Proof platform authenticates as (OAuth, via the Objection Proof AI external client app). Grants the call-activity REST endpoint and the access it needs to match prospects and log AI calls.</description>
     <fieldPermissions>
         <editable>true</editable>
+        <field>op_Call_Analysis__c.op_external_call_id__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>Lead.LeadSource</field>
         <readable>true</readable>
     </fieldPermissions>

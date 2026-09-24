@@ -1,0 +1,63 @@
+# Full active scan: ONLY against staging / preview deployments, never production.
+# PLATFORM_URL = a staging or Vercel preview URL of the platform.
+# N8N_WEBHOOK_URL = a staging copy of the n8n scoring webhook (self-hosted n8n).
+# API_KEY = a test customer's API key on that staging environment.
+env:
+  contexts:
+    - name: objectionproof-staging
+      urls:
+        - ${PLATFORM_URL}
+        - ${N8N_WEBHOOK_URL}
+      includePaths:
+        - ${PLATFORM_URL}.*
+        - ${N8N_WEBHOOK_URL}.*
+  parameters:
+    failOnError: true
+    progressToStdout: true
+jobs:
+  - type: passiveScan-config
+  - type: requestor
+    requests:
+      - url: ${PLATFORM_URL}/api/call-lead
+        method: POST
+        headers:
+          - "Content-Type: application/json"
+          - "Salesforce-Org-Id: 00D000000000000EAA"
+        data: '{"api_key":"${API_KEY}","lead_phone":"5550000000","full_name":"DAST Probe","prospect_email":"dast@example.com","city":"Phoenix","state":"AZ","zip":"85001"}'
+      - url: ${PLATFORM_URL}/api/queue-call
+        method: POST
+        headers:
+          - "Content-Type: application/json"
+          - "Salesforce-Org-Id: 00D000000000000EAA"
+        data: '{"api_key":"${API_KEY}","lead_phone":"5550000000","full_name":"DAST Probe","call_type":"never_reached_fu"}'
+      - url: ${N8N_WEBHOOK_URL}
+        method: POST
+        headers:
+          - "Content-Type: application/json;charset=UTF-8"
+          - "ObjectionProof-Token: ${API_KEY}"
+          - "Salesforce-Org-Id: 00D000000000000EAA"
+        data: '{"taskId":"00T000000000000AAA","title":"DAST Probe","recordingUrl":"https://example.com/dast.mp3","callbackUrl":"https://example.invalid/services/apexrest/objectionproof/v1/task-callback/dast","callFrom":"5550000001","callTo":"5550000000","whoId":"00Q000000000000AAA","whoName":"DAST Probe","ownerId":"005000000000000AAA","ownerName":"DAST","source":"sf-bolder360"}'
+  - type: spider
+    parameters:
+      context: objectionproof-staging
+      maxDuration: 5
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 10
+  - type: activeScan
+    parameters:
+      context: objectionproof-staging
+      maxScanDurationInMins: 60
+      maxRuleDurationInMins: 5
+  - type: report
+    parameters:
+      template: traditional-html
+      reportDir: ${REPORT_DIR}
+      reportFile: zap-active-staging
+      reportTitle: Objection Proof - ZAP active scan (staging)
+  - type: report
+    parameters:
+      template: traditional-pdf
+      reportDir: ${REPORT_DIR}
+      reportFile: zap-active-staging
+      reportTitle: Objection Proof - ZAP active scan (staging)

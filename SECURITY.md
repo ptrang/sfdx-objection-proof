@@ -151,6 +151,7 @@ The guest user cannot browse, query, or modify any org data beyond the token-val
 - All SOQL, SOSL and DML run in `USER_MODE`, so the integration user's CRUD, FLS and sharing are enforced
 - The request runs in a savepoint and rolls back entirely on any failure
 - Request bodies over 500 KB are rejected (413); error details go to the admin-only log, not to the caller
+- Requests are idempotent on `external_call_id` (a unique field on `op_Call_Analysis__c`), so retries can't create duplicate records
 
 ---
 

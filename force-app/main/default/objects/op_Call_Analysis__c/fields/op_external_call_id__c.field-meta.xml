@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>op_external_call_id__c</fullName>
+    <caseSensitive>false</caseSensitive>
+    <description>Objection Proof platform call ID. Unique, so a retried call-activity request can't record the same call twice.</description>
+    <externalId>true</externalId>
+    <label>External Call ID</label>
+    <length>255</length>
+    <required>false</required>
+    <type>Text</type>
+    <unique>true</unique>
+</CustomField>

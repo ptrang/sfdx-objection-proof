@@ -371,4 +371,32 @@ private class CallActivityServiceTest {
 
         System.assertEquals(413, res.statusCode);
     }
+
+    @IsTest
+    static void testRetryWithSameExternalCallIdIsDeduplicated() {
+        String body = '{"prospect": "Retry", "prospect_phone": "0000000001", "subject": "AI Call Retry", "external_call_id": "pch-12345"}';
+        RestResponse first = new RestResponse();
+        RestResponse second = new RestResponse();
+
+        Test.startTest();
+        System.runAs(integrationUser()) {
+            RestContext.request = buildRequest(body);
+            RestContext.response = first;
+            CallActivityService.createCallActivity();
+
+            RestContext.request = buildRequest(body);
+            RestContext.response = second;
+            CallActivityService.createCallActivity();
+        }
+        Test.stopTest();
+
+        System.assertEquals(201, first.statusCode);
+        System.assertEquals(200, second.statusCode, 'A retry should not record the call again.');
+        Map<String, Object> a = (Map<String, Object>) JSON.deserializeUntyped(first.responseBody.toString());
+        Map<String, Object> b = (Map<String, Object>) JSON.deserializeUntyped(second.responseBody.toString());
+        System.assertEquals(a.get('taskId'), b.get('taskId'), 'The retry should return the original Task.');
+        System.assertEquals(true, b.get('duplicate'));
+        System.assertEquals(1, [SELECT COUNT() FROM Task WHERE Subject = 'AI Call Retry']);
+        System.assertEquals(1, [SELECT COUNT() FROM Lead WHERE LastName = 'Retry']);
+    }
 }
