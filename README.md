@@ -29,7 +29,10 @@ The inbound callback uses a **Salesforce Force.com Site** (guest user access) so
 
 ### 1. Install the managed package
 
-Install the package version into your org. The `PostInstallScript` runs automatically and attempts to assign the site guest-user permission set (if the site was previously activated).
+Install the latest released version, **1.13.0**:
+https://login.salesforce.com/packaging/installPackage.apexp?p0=04tgL000000W6zxQAC (use `test.salesforce.com` for sandboxes)
+
+The `PostInstallScript` runs automatically. It gives the installer the **Objection Proof** and **Objection Proof Admin** permission sets, and assigns the Site guest-user permission set if the ObjProof Site already exists (on upgrades). Each install writes a one-line summary to the Objection Proof log.
 
 ### 2. Create and activate the ObjProof Site
 

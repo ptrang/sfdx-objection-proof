@@ -16,12 +16,12 @@
 > - Product: Objection Proof AI (AI sales coaching and AI calling for Sales Cloud)
 > - Package: "Objection Proof", second-generation managed package, namespace `objectionproof`, package ID 0HogL0000000QKHSA2
 > - Dev Hub (owns the package): org ID 00DgL000006LHGvUAO
-> - Current released version: 1.12.0 (04tgL000000VkcrQAC)
+> - Current released version: 1.13.0 (04tgL000000W6zxQAC)
 >
 > Please:
 > 1. Stop the expired org from being deleted. Either restore it, or convert or replace it with a Partner Business Org (PBO) for our partner account, including the License Management App (LMA).
 > 2. Keep or move our existing AgentExchange listing so it is tied to our partner account and that PBO.
-> 3. Confirm that our Dev Hub is (or can be) connected in the Partner Console, so we can link version 1.12.0 to the listing and start the security review.
+> 3. Confirm that our Dev Hub is (or can be) connected in the Partner Console, so we can link version 1.13.0 to the listing and start the security review.
 >
 > Our package is free, and it is included with our $15,000-per-year Objection Proof AI subscription, which we bill directly. Please also advise whether the listing should be Free or Paid under ISVforce.
 >

@@ -1,6 +1,6 @@
 # Objection Proof — Solution Architecture and Data Flow
 
-Prepared for the AgentExchange security review. Package: **Objection Proof** (2GP managed, namespace `objectionproof`), version 1.12.0, API 64.0.
+Prepared for the AgentExchange security review. Package: **Objection Proof** (2GP managed, namespace `objectionproof`), version 1.13.0 (04tgL000000W6zxQAC), API 64.0.
 
 Related documents:
 - [`SECURITY.md`](../../SECURITY.md): security controls in detail
@@ -21,11 +21,11 @@ Objection Proof is an AI sales-coaching platform. The managed package connects a
 
 | Component | Where it runs | Purpose |
 |---|---|---|
-| Managed package (Apex, LWC, metadata) | Customer's Salesforce org | Triggers, platform events, queueables, two REST endpoints, setup tab |
+| Managed package (Apex, LWC, metadata) | Customer's Salesforce org | Triggers, platform events, queueables, three REST endpoints (task-callback, call-activity, api-key), setup tab |
 | ObjProof Force.com Site | Customer's Salesforce org (created by the admin from `setup/sites`, not packaged) | Public HTTPS host for the scoring callback endpoint only |
 | n8n scoring workflow | Objection Proof's n8n instance (URL set by the admin in `objproof_namedcred`) | Receives recordings, runs AI scoring, calls back |
 | Objection Proof platform | `https://app.objectionproof.ai` (Next.js on Vercel, Supabase Postgres) | AI calling, call queues, customer accounts |
-| External Client App `Objection_Proof_AI` | Packaged; OAuth policies set by the customer admin | OAuth client for the platform's inbound call-activity requests |
+| External Client App `Objection_Proof_AI` | Packaged; OAuth policies set by the customer admin | OAuth client for the platform's inbound requests (call-activity, API key rotation) |
 
 ## 3. Data flows
 
