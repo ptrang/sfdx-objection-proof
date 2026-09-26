@@ -84,6 +84,32 @@ Platform's AI caller finishes a call
 - **Idempotent:** `external_call_id` is stored in a unique field on `op_Call_Analysis__c`. A retried request for a call that is already recorded returns 200 with the original Task Id and writes nothing.
 - **Writes:** it matches a Lead/Contact/Opportunity by Id or SOSL phone search (following converted Leads), or creates a Lead. It then creates a Task and an `op_Call_Analysis__c` record, and updates the `op_ai_call_*` fields on the Lead or Opportunity.
 
+### Flow D: org registration (Salesforce → platform)
+
+```
+Admin saves the API key on the Setup tab (SetupWizardController.saveApiKey)
+  → OrgRegistrationEvent__e (published after commit)
+  → OrgRegistrationEventTrigger (Automated Process user) enqueues OrgRegistrationService
+  → POST callout:objproof_lead_namedcred/api/integrations/salesforce/register   [D1]
+```
+
+- **D1 body:** `api_key`, `org_id` (`UserInfo.getOrganizationId()`), `my_domain` (the org's My Domain host). Header: `Salesforce-Org-Id`.
+- **Platform side:** looks up the active client by API key, checks the host against the `*.my.salesforce.com` allowlist, and creates that client's connection row with sending **off**. It never overwrites an existing row. A customer owner or manager reviews the address and turns sending on.
+
+### Flow E: API key rotation (platform → Salesforce)
+
+```
+Objection Proof staff rotate a client's key in the admin portal
+  → admin portal asks the platform to push it (admin-secret authenticated)
+  → platform: POST https://{my-domain}/services/oauth2/token (client credentials)
+  → platform: POST https://{my-domain}/services/apexrest/objectionproof/v1/api-key   [E1]
+  → ApiKeyService (integration user)
+```
+
+- The admin portal never talks to Salesforce; the platform brokers every Salesforce call.
+- **E1 body:** `current_api_key`, `new_api_key`. The endpoint updates the protected setting only if `current_api_key` matches the key stored in the org (a SHA-256 digest comparison). An OAuth token alone can't replace the key.
+- **Responses:** 204 updated; 200 `unchanged` (an idempotent retry); 403 current key mismatch; 409 no key configured; 400 bad input. Keys are never echoed or logged.
+
 ## 4. Identities and permissions
 
 | Identity | Permission set | Can do |
@@ -92,7 +118,7 @@ Platform's AI caller finishes a call
 | Objection Proof admins | `objproof_admin_permission_set` (assigned to the installer) | Setup tab, `Manage_Objection_Proof` custom permission, read logs |
 | Automated Process user | `objproof_automation_permission_set` | Use the two Named Credentials' principals for outbound callouts |
 | ObjProof Site guest user | `objproof_site_permission_set` | Apex class access to `TaskCallbackService` only; no object or field access |
-| Integration user (OAuth) | `objproof_integration_permission_set` | `CallActivityService`, plus read Account/Contact; read/create/edit Lead; read/edit Opportunity; create Task; create Call Analysis |
+| Integration user (OAuth) | `objproof_integration_permission_set` | `CallActivityService` and `ApiKeyService`, plus read Account/Contact; read/create/edit Lead; read/edit Opportunity; create Task; create Call Analysis |
 
 ## 5. Secrets and credentials
 
@@ -115,5 +141,6 @@ No secrets are shipped in package metadata. `Log__c` records never contain reque
 | Endpoint | Operator | Direction |
 |---|---|---|
 | n8n scoring webhook (URL in `objproof_namedcred`) | Objection Proof (n8n) | Salesforce → n8n |
+| `https://app.objectionproof.ai/api/integrations/salesforce/register` | Objection Proof | Salesforce → platform |
 | `https://app.objectionproof.ai/api/call-lead`, `/api/queue-call` | Objection Proof | Salesforce → platform |
 | `{site}/services/apexrest/objectionproof/v1/task-callback/{token}` | Customer's Salesforce Site | n8n → Salesforce |

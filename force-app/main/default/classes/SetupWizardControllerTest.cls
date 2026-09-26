@@ -120,6 +120,20 @@ private class SetupWizardControllerTest {
     }
 
     @IsTest
+    static void testSaveApiKeyPublishesRegistration() {
+        Test.startTest();
+        System.runAs(adminUser()) {
+            SetupWizardController.saveApiKey('new-api-key');
+        }
+        Test.getEventBus().deliver();
+        System.assertEquals(1, [
+            SELECT COUNT() FROM AsyncApexJob
+            WHERE ApexClass.Name = 'OrgRegistrationService' AND JobType = 'Queueable'
+        ], 'Saving the key should queue the org registration');
+        Test.stopTest();
+    }
+
+    @IsTest
     static void testSaveApiKeyBlankRejected() {
         System.runAs(adminUser()) {
             try {

@@ -107,6 +107,10 @@ public with sharing class SetupWizardController {
             throw new AuraHandledException('API key must be 255 characters or fewer.');
         }
         SettingsService.setApiKey(apiKey.trim());
+        // Register the org with Objection Proof. The callout runs as the Automated
+        // Process user, which holds the named credential access; published after
+        // commit so it only fires if the key was saved.
+        EventBus.publish(new OrgRegistrationEvent__e(RequestedBy__c = UserInfo.getUserId()));
     }
 
     @AuraEnabled(cacheable=true)
